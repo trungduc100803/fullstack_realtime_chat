@@ -3,12 +3,14 @@ import toast from "react-hot-toast";
 import { axiosInstance } from "../lib/axios";
 import { useAuthStore } from "./useAuthStore";
 
+
 export const useChatStore = create((set, get) => ({
   messages: [],
   users: [],
   selectedUser: null,
   isUsersLoading: false,
   isMessagesLoading: false,
+  userSearch: {},
 
   getUsers: async () => {
     set({ isUsersLoading: true });
@@ -42,6 +44,14 @@ export const useChatStore = create((set, get) => ({
       toast.error(error.response.data.message);
     }
   },
+  searchUser: async (email) => {
+    try {
+      const res = await axiosInstance.post('/messages/searchUser', email)
+      set({ userSearch: res.data })
+    } catch (error) {
+      toast.error(error.response.data.message);
+    }
+  },
 
   subscribeToMessages: () => {
     const { selectedUser } = get();
@@ -57,6 +67,19 @@ export const useChatStore = create((set, get) => ({
         messages: [...get().messages, newMessage],
       });
     });
+
+
+  },
+
+  subcribeAddFriend: () => {
+    const socket = useAuthStore.getState().socket;
+    const authUser = useAuthStore.getState().authUser
+
+    if (authUser !== null) {
+      socket.on("addFriend", (friend) => {
+        toast.success(`${friend.fullName} đã gửi lời mời kết bạn!`)
+      });
+    }
   },
 
   unsubscribeFromMessages: () => {
