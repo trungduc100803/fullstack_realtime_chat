@@ -6,17 +6,22 @@ import { useAuthStore } from "./useAuthStore";
 
 export const useChatStore = create((set, get) => ({
   messages: [],
+  messagesGroup: [],
   users: [],
+  groups: [],
   selectedUser: null,
+  selectedGroup: null,
   isUsersLoading: false,
   isMessagesLoading: false,
+  isMessagesGroupLoading: false,
   userSearch: {},
 
   getUsers: async () => {
     set({ isUsersLoading: true });
     try {
       const res = await axiosInstance.get("/messages/users");
-      set({ users: res.data });
+      set({ users: res.data.arrUser });
+      set({ groups: res.data.arrGroup });
     } catch (error) {
       toast.error(error.response.data.message);
     } finally {
@@ -35,11 +40,31 @@ export const useChatStore = create((set, get) => ({
       set({ isMessagesLoading: false });
     }
   },
+  getMessagesGroups: async (userId) => {
+    set({ isMessagesGroupLoading: true });
+    try {
+      const res = await axiosInstance.get(`/messages/group/${userId}`);
+      set({ messagesGroup: res.data });
+    } catch (error) {
+      toast.error(error.response.data.message);
+    } finally {
+      set({ isMessagesGroupLoading: false });
+    }
+  },
   sendMessage: async (messageData) => {
     const { selectedUser, messages } = get();
     try {
       const res = await axiosInstance.post(`/messages/send/${selectedUser._id}`, messageData);
       set({ messages: [...messages, res.data] });
+    } catch (error) {
+      toast.error(error.response.data.message);
+    }
+  },
+  sendMessageGroup: async (messageData) => {
+    const { selectedGroup, messagesGroup } = get();
+    try {
+      const res = await axiosInstance.post(`/messages/send/group${selectedGroup._id}`, messageData);
+      set({ messagesGroup: [...messagesGroup, res.data] });
     } catch (error) {
       toast.error(error.response.data.message);
     }
@@ -57,9 +82,29 @@ export const useChatStore = create((set, get) => ({
     const { selectedUser } = get();
     if (!selectedUser) return;
 
+    console.log(selectedUser)
     const socket = useAuthStore.getState().socket;
 
     socket.on("newMessage", (newMessage) => {
+      const isMessageSentFromSelectedUser = newMessage.senderId === selectedUser._id;
+      if (!isMessageSentFromSelectedUser) return;
+
+      set({
+        messages: [...get().messages, newMessage],
+      });
+    });
+
+
+  },
+
+  subscribeToMessagesGroup: () => {
+    const { selectedGroup } = get();
+    if (!selectedGroup) return;
+
+    const socket = useAuthStore.getState().socket;
+// dang vuong o day, cần nhận được thông báo tin nhăn
+    // selectedGroup
+    socket.on("newMessageGroup", (newMessage) => {
       const isMessageSentFromSelectedUser = newMessage.senderId === selectedUser._id;
       if (!isMessageSentFromSelectedUser) return;
 
@@ -88,4 +133,5 @@ export const useChatStore = create((set, get) => ({
   },
 
   setSelectedUser: (selectedUser) => set({ selectedUser }),
+  setSelectedGroup: (selectedGroup) => set({ selectedGroup }),
 }));

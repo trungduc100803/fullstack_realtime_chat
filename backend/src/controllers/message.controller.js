@@ -1,4 +1,5 @@
 import User from "../models/user.model.js";
+import Group from "../models/group.model.js";
 import Message from "../models/message.model.js";
 
 import cloudinary from "../lib/cloudinary.js";
@@ -11,14 +12,24 @@ export const getUsersForSidebar = async (req, res) => {
 
     const user = await User.findOne({ _id: loggedInUserId })
     const filteredUsers = user.conversation
+    const filteredGroups = user.groups
 
-    const arr = await Promise.all(
+    const arrUser = await Promise.all(
       filteredUsers.map(async u => {
         const res = await User.findById(u);
         return res;
       })
     );
-    res.status(200).json(arr);
+    const arrGroup = await Promise.all(
+      filteredGroups.map(async u => {
+        const res = await Group.findById(u);
+        return res;
+      })
+    );
+    res.status(200).json({
+      arrUser,
+      arrGroup
+    });
   } catch (error) {
     console.error("Error in getUsersForSidebar: ", error.message);
     res.status(500).json({ error: "Internal server error" });
@@ -249,6 +260,38 @@ export const getMessages = async (req, res) => {
   }
 };
 
+export const getMessagesGroups = async (req, res) => {
+  try {
+    const { id: groupToChatId } = req.params;
+    const myId = req.user._id;
+
+    const group = await Group.findById(groupToChatId)
+    const arr = await Promise.all(
+      group.members
+        .filter(m => !m._id.equals(myId)) // Bỏ qua chính mình
+        .map(async (m) => {
+          console.log('Checking between:', myId, 'and', m._id);
+          const messages = await Message.find({
+            $or: [
+              { senderId: myId, receiverId: m._id },
+              { senderId: m._id, receiverId: myId },
+            ],
+          });
+          console.log('Found messages:', messages.length);
+          return messages;
+        })
+    );
+
+    const allMessages = arr.flat();
+
+
+    res.status(200).json(allMessages);
+  } catch (error) {
+    console.log("Error in getMessages controller: ", error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
 export const sendMessage = async (req, res) => {
   try {
     const { text, image } = req.body;
@@ -277,6 +320,54 @@ export const sendMessage = async (req, res) => {
     }
 
     res.status(201).json(newMessage);
+  } catch (error) {
+    console.log("Error in sendMessage controller: ", error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const sendMessageGroup = async (req, res) => {
+  try {
+    const { text, image } = req.body;
+    const { id: groupReceiverId } = req.params;
+    const senderId = req.user._id;
+
+    let imageUrl;
+    if (image) {
+      // Upload base64 image to cloudinary
+      const uploadResponse = await cloudinary.uploader.upload(image);
+      imageUrl = uploadResponse.secure_url;
+    }
+
+    const group = await Group.findById(groupReceiverId)
+    // bo nguoi gui ddi
+    const index = group.members.indexOf(senderId);
+    if (index !== -1) {
+      group.members.splice(index, 1);
+    }
+    // tao message cho cac thanh vien
+    const arr = await Promise.all(
+      group.members.map(async m => {
+        const newMessage = new Message({
+          senderId,
+          receiverId: m._id,
+          text,
+          image: imageUrl,
+        });
+        await newMessage.save();
+
+        return newMessage
+      })
+    );
+
+    group.members.forEach(m => {
+      if (m._id) {
+        io.to(m._id).emit("newMessageGroup", arr);
+      }
+    })
+    // const receiverSocketId = getReceiverSocketId(receiverId);
+
+    res.status(201).json(arr);
   } catch (error) {
     console.log("Error in sendMessage controller: ", error.message);
     res.status(500).json({ error: "Internal server error" });

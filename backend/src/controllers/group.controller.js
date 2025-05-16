@@ -18,7 +18,7 @@ export const createGroup = async (req, res) => {
     admin,
     name,
     image,
-    members
+    members: [admin, ...members]
   })
   await newGroup.save()
 

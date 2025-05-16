@@ -6,10 +6,12 @@ const groupSchema = new mongoose.Schema(
             type: String,
             require: true
         },
-        members: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "User",
-        },
+        members: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User",
+            }
+        ],
         image: {
             type: String,
             default: ''

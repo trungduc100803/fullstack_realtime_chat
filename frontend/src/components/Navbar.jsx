@@ -15,6 +15,7 @@ const Navbar = () => {
   const [debouncedValue, setDebouncedValue] = useState('');
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [loadingCreateGroup, setLoadingCreateGroup] = useState(false);
   const [searchMemberValue, setSearchMemberValue] = useState('')
   const [groupValue, setGroupValue] = useState('')
   const { logout, authUser } = useAuthStore();
@@ -27,6 +28,37 @@ const Navbar = () => {
 
   const handleClickChooseImg = () => {
     fileInputRef.current.click();
+  }
+
+  const handleCreateGroup = async () => {
+    // loading
+    setLoadingCreateGroup(true)
+    // call api create group
+    const res = await axiosInstance.post('/groups/create-group', {
+      name: groupValue,
+      image: base64,
+      members: checkedList
+    })
+    if (res.data) {
+      // delete state close modal and loading
+      setBase64('')
+      setCheckedList([])
+      setListMemberSelected([])
+      setGroupValue('')
+      document.getElementById('close_add_member').click()
+      document.getElementById('btn-closeaddgroup').click()
+      setLoadingCreateGroup(false)
+      toast('Tạo nhóm thành công')
+      return
+    }
+    setBase64('')
+    setCheckedList([])
+    setListMemberSelected([])
+    setGroupValue('')
+    document.getElementById('close_add_member').click()
+    document.getElementById('btn-closeaddgroup').click()
+    setLoadingCreateGroup(false)
+    toast('Tạo nhóm không thành công')
   }
 
   const handleCheckMember = e => {
@@ -102,6 +134,14 @@ const Navbar = () => {
   const handleOpenModalCreateGroup = () => {
     document.getElementById('modal_add_group').showModal()
     setBase64('')
+
+  }
+
+  const handleCloseModalCreateGroup = () => {
+    setBase64('')
+    setCheckedList([])
+    setListMemberSelected([])
+    setGroupValue('')
   }
 
   const handleChangeImgGroup = event => {
@@ -141,8 +181,7 @@ const Navbar = () => {
     setListMemberSelected(arr)
     setDebouncedValue('')
   }
-  console.log(checkedList)
-  console.log(listMemberSelected)
+
 
   return (
     <header
@@ -214,7 +253,7 @@ const Navbar = () => {
         <div className="modal-box ">
           <form method="dialog" className="">
             {/* if there is a button in form, it will close the modal */}
-            <button onClick={() => setBase64('')} className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+            <button onClick={handleCloseModalCreateGroup} id="btn-closeaddgroup" className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
             <h3 className="font-bold text-lg">Tạo nhóm</h3>
             <div className="mt-6">
               <div className="flex items-center gap-2">
@@ -233,7 +272,7 @@ const Navbar = () => {
                     </div>
                 }
                 <div className="border-b-2 border-indigo-500 w-full">
-                  <input type="text" onChange={e => setGroupValue(e.target.value)} className="grow outline-none w-full p-2" placeholder="Đặt tên nhóm" />
+                  <input value={groupValue} type="text" onChange={e => setGroupValue(e.target.value)} className="grow outline-none w-full p-2" placeholder="Đặt tên nhóm" />
                 </div>
               </div>
               <div onClick={handleAddMemberIntoGroup} className="btn mt-5 btn-sm gap-2 transition-colors">
@@ -305,7 +344,9 @@ const Navbar = () => {
                 </> :
                 <></>
             }
-            <div className="btn btn-soft rounded-full mt-4 w-full">Tạo nhóm</div>
+            <div onClick={handleCreateGroup} className="btn btn-soft rounded-full mt-4 w-full">
+              {loadingCreateGroup ? <Loader className="size-4 animate-spin" /> : 'Tạo nhóm'}
+            </div>
           </form>
         </div>
       </dialog>
