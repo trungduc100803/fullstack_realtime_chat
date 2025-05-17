@@ -260,38 +260,6 @@ export const getMessages = async (req, res) => {
   }
 };
 
-export const getMessagesGroups = async (req, res) => {
-  try {
-    const { id: groupToChatId } = req.params;
-    const myId = req.user._id;
-
-    const group = await Group.findById(groupToChatId)
-    const arr = await Promise.all(
-      group.members
-        .filter(m => !m._id.equals(myId)) // Bỏ qua chính mình
-        .map(async (m) => {
-          console.log('Checking between:', myId, 'and', m._id);
-          const messages = await Message.find({
-            $or: [
-              { senderId: myId, receiverId: m._id },
-              { senderId: m._id, receiverId: myId },
-            ],
-          });
-          console.log('Found messages:', messages.length);
-          return messages;
-        })
-    );
-
-    const allMessages = arr.flat();
-
-
-    res.status(200).json(allMessages);
-  } catch (error) {
-    console.log("Error in getMessages controller: ", error.message);
-    res.status(500).json({ error: "Internal server error" });
-  }
-};
-
 export const sendMessage = async (req, res) => {
   try {
     const { text, image } = req.body;
@@ -326,50 +294,140 @@ export const sendMessage = async (req, res) => {
   }
 };
 
+// export const getMessagesGroups = async (req, res) => {
+//   try {
+//     const { id: groupToChatId } = req.params;
+//     const myId = req.user._id;
+
+//     const group = await Group.findById(groupToChatId)
+//     const arr = await Promise.all(
+//       group.members
+//         .filter(m => !m._id.equals(myId)) // Bỏ qua chính mình
+//         .map(async (m) => {
+//           console.log('Checking between:', myId, 'and', m._id);
+//           const messages = await Message.find({
+//             $or: [
+//               { senderId: myId, receiverId: m._id },
+//               { senderId: m._id, receiverId: myId },
+//             ],
+//           });
+//           console.log('Found messages:', messages.length);
+//           return messages;
+//         })
+//     );
+
+//     const allMessages = arr.flat();
+
+
+//     res.status(200).json(allMessages);
+//   } catch (error) {
+//     console.log("Error in getMessages controller: ", error.message);
+//     res.status(500).json({ error: "Internal server error" });
+//   }
+// };
+
+
+
+// export const sendMessageGroup = async (req, res) => {
+//   try {
+//     const { text, image } = req.body;
+//     const { id: groupReceiverId } = req.params;
+//     const senderId = req.user._id;
+
+//     let imageUrl;
+//     if (image) {
+//       // Upload base64 image to cloudinary
+//       const uploadResponse = await cloudinary.uploader.upload(image);
+//       imageUrl = uploadResponse.secure_url;
+//     }
+
+//     const group = await Group.findById(groupReceiverId)
+//     // bo nguoi gui ddi
+//     const index = group.members.indexOf(senderId);
+//     if (index !== -1) {
+//       group.members.splice(index, 1);
+//     }
+//     // tao message cho cac thanh vien
+//     const arr = await Promise.all(
+//       group.members.map(async m => {
+//         const newMessage = new Message({
+//           senderId,
+//           receiverId: m._id,
+//           text,
+//           image: imageUrl,
+//         });
+//         await newMessage.save();
+
+//         return newMessage
+//       })
+//     );
+
+//     group.members.forEach(m => {
+//       if (m._id) {
+//         io.to(m._id).emit("newMessageGroup", arr);
+//       }
+//     })
+//     // const receiverSocketId = getReceiverSocketId(receiverId);
+
+//     res.status(201).json(arr);
+//   } catch (error) {
+//     console.log("Error in sendMessage controller: ", error.message);
+//     res.status(500).json({ error: "Internal server error" });
+//   }
+// };
+
+export const getMessagesGroups = async (req, res) => {
+  try {
+    const { id: groupId } = req.params;
+
+    const messages = await Message.find({ groupId }).sort({ createdAt: 1 });
+
+    res.status(200).json(messages);
+  } catch (error) {
+    console.error("Error getting group messages:", error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+
 export const sendMessageGroup = async (req, res) => {
   try {
     const { text, image } = req.body;
     const { id: groupReceiverId } = req.params;
     const senderId = req.user._id;
 
+    // Optional: upload ảnh nếu có
     let imageUrl;
     if (image) {
-      // Upload base64 image to cloudinary
       const uploadResponse = await cloudinary.uploader.upload(image);
       imageUrl = uploadResponse.secure_url;
     }
 
-    const group = await Group.findById(groupReceiverId)
-    // bo nguoi gui ddi
-    const index = group.members.indexOf(senderId);
-    if (index !== -1) {
-      group.members.splice(index, 1);
+    // Kiểm tra group tồn tại
+    const group = await Group.findById(groupReceiverId).populate("members", "_id");
+    if (!group) {
+      return res.status(404).json({ error: "Group not found" });
     }
-    // tao message cho cac thanh vien
-    const arr = await Promise.all(
-      group.members.map(async m => {
-        const newMessage = new Message({
-          senderId,
-          receiverId: m._id,
-          text,
-          image: imageUrl,
-        });
-        await newMessage.save();
 
-        return newMessage
-      })
-    );
+    // Tạo 1 message duy nhất với groupId
+    const newMessage = new Message({
+      senderId,
+      groupId: groupReceiverId,
+      text,
+      image: imageUrl,
+    });
+    await newMessage.save();
 
-    group.members.forEach(m => {
-      if (m._id) {
-        io.to(m._id).emit("newMessageGroup", arr);
+    // Gửi real-time đến các thành viên trừ người gửi
+    group.members.forEach((member) => {
+      if (!member._id.equals(senderId)) {
+        io.to(member._id.toString()).emit("newMessageGroup", newMessage);
       }
-    })
-    // const receiverSocketId = getReceiverSocketId(receiverId);
+    });
 
-    res.status(201).json(arr);
+    return res.status(201).json(newMessage);
   } catch (error) {
-    console.log("Error in sendMessage controller: ", error.message);
+    console.error("Error in sendMessageGroup:", error.message);
     res.status(500).json({ error: "Internal server error" });
   }
 };

@@ -14,9 +14,9 @@ router.get("/getNotiAddFriend", protectRoute, getNotifyAddFriend);
 router.post("/acceptAddfriend", protectRoute, acceptAddFriend);
 router.post("/checkfriend", protectRoute, checkFriend);
 router.get("/:id", protectRoute, getMessages);
-router.get("/group/:id", protectRoute, getMessagesGroups);
-
 router.post("/send/:id", protectRoute, sendMessage);
+
+router.get("/group/:id", protectRoute, getMessagesGroups);
 router.post("/send/group/:id", protectRoute, sendMessageGroup);
 
 export default router;

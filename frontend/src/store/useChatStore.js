@@ -105,11 +105,11 @@ export const useChatStore = create((set, get) => ({
 // dang vuong o day, cần nhận được thông báo tin nhăn
     // selectedGroup
     socket.on("newMessageGroup", (newMessage) => {
-      const isMessageSentFromSelectedUser = newMessage.senderId === selectedUser._id;
+      const isMessageSentFromSelectedUser = newMessage.senderId === selectedGroup._id;
       if (!isMessageSentFromSelectedUser) return;
 
       set({
-        messages: [...get().messages, newMessage],
+        messagesGroup: [...get().messagesGroup, newMessage],
       });
     });
 
@@ -130,6 +130,10 @@ export const useChatStore = create((set, get) => ({
   unsubscribeFromMessages: () => {
     const socket = useAuthStore.getState().socket;
     socket.off("newMessage");
+  },
+  unsubscribeFromMessagesGroup: () => {
+    const socket = useAuthStore.getState().socket;
+    socket.off("newMessageGroup");
   },
 
   setSelectedUser: (selectedUser) => set({ selectedUser }),
