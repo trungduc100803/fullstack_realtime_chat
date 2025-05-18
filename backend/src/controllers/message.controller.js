@@ -380,7 +380,7 @@ export const getMessagesGroups = async (req, res) => {
   try {
     const { id: groupId } = req.params;
 
-    const messages = await Message.find({ groupId }).sort({ createdAt: 1 });
+    const messages = await Message.find({ groupId }).populate("senderId", "fullName profilePic").sort({ createdAt: 1 });
 
     res.status(200).json(messages);
   } catch (error) {
@@ -420,6 +420,7 @@ export const sendMessageGroup = async (req, res) => {
 
     // Gửi real-time đến các thành viên trừ người gửi
     group.members.forEach((member) => {
+      console.log(member)
       if (!member._id.equals(senderId)) {
         io.to(member._id.toString()).emit("newMessageGroup", newMessage);
       }

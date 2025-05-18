@@ -63,7 +63,7 @@ export const useChatStore = create((set, get) => ({
   sendMessageGroup: async (messageData) => {
     const { selectedGroup, messagesGroup } = get();
     try {
-      const res = await axiosInstance.post(`/messages/send/group${selectedGroup._id}`, messageData);
+      const res = await axiosInstance.post(`/messages/send/group/${selectedGroup._id}`, messageData);
       set({ messagesGroup: [...messagesGroup, res.data] });
     } catch (error) {
       toast.error(error.response.data.message);
@@ -82,7 +82,6 @@ export const useChatStore = create((set, get) => ({
     const { selectedUser } = get();
     if (!selectedUser) return;
 
-    console.log(selectedUser)
     const socket = useAuthStore.getState().socket;
 
     socket.on("newMessage", (newMessage) => {
@@ -102,18 +101,19 @@ export const useChatStore = create((set, get) => ({
     if (!selectedGroup) return;
 
     const socket = useAuthStore.getState().socket;
-// dang vuong o day, cần nhận được thông báo tin nhăn
+    // dang vuong o day, cần nhận được thông báo tin nhăn
     // selectedGroup
     socket.on("newMessageGroup", (newMessage) => {
-      const isMessageSentFromSelectedUser = newMessage.senderId === selectedGroup._id;
-      if (!isMessageSentFromSelectedUser) return;
+      // const isMessageSentFromSelectedUser = newMessage.senderId === selectedGroup._id;
+      // if (!isMessageSentFromSelectedUser) return;
+      console.log(newMessage)
+      if (newMessage.groupId !== selectedGroup._id) return;
+
 
       set({
         messagesGroup: [...get().messagesGroup, newMessage],
       });
     });
-
-
   },
 
   subcribeAddFriend: () => {
