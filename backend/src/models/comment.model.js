@@ -14,12 +14,12 @@ const commentSchema = new mongoose.Schema(
             type: String,
             default: ''
         },
-        resonse: [
+        replies: [
             {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: "Comment"
-            }
-        ]
+                ref: "Comment",
+            },
+        ],
     },
     { timestamps: true }
 );

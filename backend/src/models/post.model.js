@@ -6,18 +6,22 @@ const postSchema = new mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
         },
-        cation: {
+        caption: {
             type: String,
             default: ''
         },
-        image: {
-            type: String,
-            default: ''
-        },
-        like: {
-            type: Number,
-            default: 0
-        },
+        images: [
+            {
+                type: String,
+                default: ''
+            }
+        ],
+        likes: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User",
+            }
+        ],
         comments: [
             {
                 type: mongoose.Schema.Types.ObjectId,

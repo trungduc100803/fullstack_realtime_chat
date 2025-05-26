@@ -29,7 +29,7 @@ const userSchema = new mongoose.Schema(
     posts: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Comment",
+        ref: "Post",
       }
     ],
     friends: [
