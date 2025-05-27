@@ -7,6 +7,7 @@ import LikePng from '../constants/like.png'
 import { Image } from 'antd'
 import PostForm from "../components/PostForm";
 import { axiosInstance } from "../lib/axios";
+import DefaultUser from '../constants/default_user.jpg'
 import { formatMessageTime } from "../lib/utils";
 
 const ProfilePage = () => {
@@ -22,12 +23,12 @@ const ProfilePage = () => {
   const [visibleImageBeforeEditComment, setVisibleImageBeforeEditComment] = useState(false)
 
   const [replyFormVisible, setReplyFormVisible] = useState(null); // Lưu comment._id của comment đang mở form
-  const [editFormVisible, setEditFormVisible] = useState(null);
   const [deleteFormVisible, setDeleteFormVisible] = useState(null);
-  const [replyContent, setReplyContent] = useState('');
   const [editContent, setEditContent] = useState('');
-  const [replyImage, setReplyImage] = useState('');
+  const [editFormVisible, setEditFormVisible] = useState(null);
   const [editImage, setEditImage] = useState('');
+  const [replyImage, setReplyImage] = useState('');
+  const [replyContent, setReplyContent] = useState('');
   const fileInputRef = useRef(null);
 
 
@@ -224,8 +225,8 @@ const ProfilePage = () => {
       <div className="max-w-2xl mx-auto p-4 py-8">
         <div className="bg-base-300 rounded-xl p-6 space-y-8">
           <div className="text-center">
-            <h1 className="text-2xl font-semibold ">Profile</h1>
-            <p className="mt-2">Your profile information</p>
+            <h1 className="text-2xl font-semibold ">Cá nhân</h1>
+            <p className="mt-2">Thông tin cá nhân</p>
           </div>
 
           {/* avatar upload section */}
@@ -259,7 +260,7 @@ const ProfilePage = () => {
               </label>
             </div>
             <p className="text-sm text-zinc-400">
-              {isUpdatingProfile ? "Uploading..." : "Click the camera icon to update your photo"}
+              {isUpdatingProfile ? "Uploading..." : "Bấm vào biểu tượng camera để thay đổi hình nền"}
             </p>
           </div>
 
@@ -267,7 +268,7 @@ const ProfilePage = () => {
             <div className="space-y-1.5">
               <div className="text-sm text-zinc-400 flex items-center gap-2">
                 <User className="w-4 h-4" />
-                Full Name
+                Tên đầy đủ
               </div>
               <p className="px-4 py-2.5 bg-base-200 rounded-lg border">{authUser?.fullName}</p>
             </div>
@@ -275,22 +276,22 @@ const ProfilePage = () => {
             <div className="space-y-1.5">
               <div className="text-sm text-zinc-400 flex items-center gap-2">
                 <Mail className="w-4 h-4" />
-                Email Address
+                Địa chỉ email
               </div>
               <p className="px-4 py-2.5 bg-base-200 rounded-lg border">{authUser?.email}</p>
             </div>
           </div>
 
           <div className="mt-6 bg-base-300 rounded-xl p-6">
-            <h2 className="text-lg font-medium  mb-4">Account Information</h2>
+            <h2 className="text-lg font-medium  mb-4">Trạng thái tài khoản</h2>
             <div className="space-y-3 text-sm">
               <div className="flex items-center justify-between py-2 border-b border-zinc-700">
                 <span>Member Since</span>
                 <span>{authUser.createdAt?.split("T")[0]}</span>
               </div>
               <div className="flex items-center justify-between py-2">
-                <span>Account Status</span>
-                <span className="text-green-500">Active</span>
+                <span>Trạng thái</span>
+                <span className="text-green-500">Kích hoạt</span>
               </div>
             </div>
           </div>
@@ -368,7 +369,7 @@ const ProfilePage = () => {
                       <div className="flex  justify-center items-center overflow-hidden">
                         <div className="avatar">
                           <div className="w-12 mr-3 rounded-full">
-                            <img src={post.userPost.profilePic} />
+                            <img src={post.userPost.profilePic !== '' ? post.userPost.profilePic: DefaultUser} />
                           </div>
                         </div>
                         <div className="" >
@@ -424,7 +425,7 @@ const ProfilePage = () => {
                     {/*  */}
                     <form onSubmit={(e) => handleSubmit(e, post._id)}>
                       <div className="flex items-center px-4 mt-3 gap-3 mb-3">
-                        <img src={authUser.profilePic} className="w-9 h-9 rounded-full object-cover" />
+                        <img src={authUser.profilePic !== '' ? authUser.profilePic : DefaultUser} className="w-9 h-9 rounded-full object-cover" />
 
                         <input
                           type="text"
@@ -463,7 +464,7 @@ const ProfilePage = () => {
                         {postComments[post._id].map((comment) => {
                           return (<div key={comment._id} className="flex items-start gap-3" >
                             <img
-                              src={comment.userComment.profilePic}
+                              src={comment.userComment.profilePic  !== '' ? comment.userComment.profilePic : DefaultUser}
                               alt="avatar"
                               className="w-9 h-9 rounded-full object-cover"
                             />
@@ -543,7 +544,7 @@ const ProfilePage = () => {
                                     <div onClick={() => setEditFormVisible(null)} className="text-xs text-gray-400 cursor-pointer mt-1 hover:underline">
                                       Đóng</div>
                                     <img
-                                      src={authUser.profilePic}
+                                      src={authUser.profilePic !== '' ? authUser.profilePic : DefaultUser}
                                       alt="your-avatar"
                                       className="w-8 h-8 rounded-full object-cover"
                                     />
@@ -644,7 +645,7 @@ function CaptionToggle({ caption }) {
     <div>
       <p
         ref={captionRef}
-        className={`text-base whitespace-pre-line ${!expanded ? "line-clamp-3" : ""}`}
+        className={`text-base mt-4 whitespace-pre-line ${!expanded ? "line-clamp-3" : ""}`}
       >
         {caption}
       </p>

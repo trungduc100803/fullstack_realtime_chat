@@ -23,7 +23,92 @@ const ProfileFriend = () => {
     const [commentsByPost, setCommentsByPost] = useState({});
     const [imagesByPost, setImagesByPost] = useState({});
     const fileInputRefs = useRef(null);
+  const [replyFormVisible, setReplyFormVisible] = useState(null); // Lưu comment._id của comment đang mở form
+  const [replyImage, setReplyImage] = useState('');
+  const [replyContent, setReplyContent] = useState('');
+  const fileInputRef = useRef(null);
+    const [editContent, setEditContent] = useState('');
+  const [editFormVisible, setEditFormVisible] = useState(null);
+  const [editImage, setEditImage] = useState('');
+  const editContentRef = useRef(null);
+  const [visibleImageBeforeEditComment, setVisibleImageBeforeEditComment] = useState(false)
+  const [deleteFormVisible, setDeleteFormVisible] = useState(null);
 
+const handleOpenModalDeleteComment = (idComment) => {
+    setDeleteFormVisible(idComment)
+    document.getElementById('modalDeletecomment').showModal()
+  }
+
+ const handleCloseModalDeleteComment = () => {
+    document.getElementById('deletecomment').click()
+    setDeleteFormVisible(null)
+  }
+
+  const deleteComment = async () => {
+    await axiosInstance.delete(`/comments/delete-comment/${deleteFormVisible}`)
+    handleCloseModalDeleteComment()
+    fetchCommentsForAllPosts()
+  }
+
+  const handleImageChangeEdit = (e) => {
+    const file = e.target.files[0]
+    setVisibleImageBeforeEditComment(true)
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setEditImage(reader.result);
+    };
+    reader.readAsDataURL(file); // chuyển file ảnh thành base64
+  };
+
+   const handleEditCommentSubmit = async (e, CommentId) => {
+    e.preventDefault();
+    try {
+      await axiosInstance.put(`/comments/edit-comment/${CommentId}`, {
+        content: editContent,
+        image: editImage
+      });
+      // Reset
+      setEditContent('');
+      setEditImage('');
+      setEditFormVisible(null);
+      setVisibleImageBeforeEditComment(false)
+      // Gọi hàm reload comment (tùy vào bạn có custom hook hoặc re-fetch lại)
+      fetchCommentsForAllPosts()
+    } catch (error) {
+      console.error('Lỗi khi gửi phản hồi:', error);
+    }
+  };
+
+  const handleReplySubmit = async (e, parentCommentId) => {
+    e.preventDefault();
+
+    try {
+      await axiosInstance.post(`/comments/reply/${parentCommentId}`, {
+        content: replyContent,
+        image: replyImage
+      });
+      // Reset
+      setReplyContent('');
+      setReplyImage('');
+      setReplyFormVisible(null);
+      // Gọi hàm reload comment (tùy vào bạn có custom hook hoặc re-fetch lại)
+      fetchCommentsForAllPosts()
+    } catch (error) {
+      console.error('Lỗi khi gửi phản hồi:', error);
+    }
+  };
+
+   const handleImageChangeReply = (e) => {
+    const file = e.target.files[0]
+
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setReplyImage(reader.result);
+    };
+    reader.readAsDataURL(file); // chuyển file ảnh thành base64
+  };
 
     const handleImageChange = (e, postId) => {
         const file = e.target.files[0]
@@ -105,9 +190,19 @@ const ProfileFriend = () => {
         }
     }
 
-    const handleSubmit = () => {
+    const handleSubmit = async (e, postId) => {
+    e.preventDefault()
+    const content = commentsByPost[postId] || '';
+    const image = imagesByPost[postId] || '';
 
-    }
+    await axiosInstance.post(`/comments/create-comment/${postId}`, {
+      content, image
+    });
+    fetchCommentsForAllPosts()
+    // Clear sau khi submit
+    setCommentsByPost(prev => ({ ...prev, [postId]: '' }));
+    setImagesByPost(prev => ({ ...prev, [postId]: null }));
+  }
 
     return (
         <div className="h-screen pt-20">
@@ -131,15 +226,24 @@ const ProfileFriend = () => {
                         </div>
                         <div className="btn_user mt-6 flex items-center">
                             <RelationshipStatus relationship={relationship} userIdAddFriend={id} getUser={getUser} getRelationship={statusRelationship} />
-
-                            <button className="btn btn-sm gap-2 border-solid border-gray-400" >
-                                <MessageSquare className="size-5" />
-                                <span className="hidden sm:inline">Nhắn tin</span>
-                            </button>
                         </div>
                     </div>
                 </div>
             </div>
+            <dialog id="modalDeletecomment" className="modal">
+        <div className="modal-box">
+          <form method="dialog">
+            {/* if there is a button in form, it will close the modal */}
+            <button id="deletecomment" className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+          </form>
+          <h3 className="font-bold text-lg">Thông báo</h3>
+          <div className="pt-6 pb-6">Bạn có chắc chắn muốn xóa bình luận?</div>
+          <div className="flex items-center justify-end">
+            <button onClick={handleCloseModalDeleteComment} className="btn btn-success mr-3">Hủy bỏ</button>
+            <button onClick={deleteComment} className="btn btn-error">Xóa</button>
+          </div>
+        </div>
+      </dialog>
             <div className="mt-8">
                 <div className="max-w-6xl mx-auto p-4 py-8 mt-2 rounded-xl">
                     {/* post */}
@@ -209,7 +313,7 @@ const ProfileFriend = () => {
                                             {/*  */}
                                             <form onSubmit={(e) => handleSubmit(e, post._id)}>
                                                 <div className="flex items-center px-4 mt-3 gap-3 mb-3">
-                                                    <img src={authUser.profilePic} className="w-9 h-9 rounded-full object-cover" />
+                                                    <img src={authUser.profilePic !== '' ? authUser.profilePic : DefaultUser} className="w-9 h-9 rounded-full object-cover" />
 
                                                     <input
                                                         type="text"
@@ -248,7 +352,7 @@ const ProfileFriend = () => {
                                                     {postComments[post._id].map((comment) => {
                                                         return (<div key={comment._id} className="flex items-start gap-3" >
                                                             <img
-                                                                src={comment.userComment.profilePic}
+                                                                src={comment.userComment.profilePic  !== '' ? comment.userComment.profilePic : DefaultUser}
                                                                 alt="avatar"
                                                                 className="w-9 h-9 rounded-full object-cover"
                                                             />
@@ -285,13 +389,13 @@ const ProfileFriend = () => {
                                                                 }
 
                                                                 {/* reply form */}
-                                                                {/* {replyFormVisible === comment._id && (
+                                                                {replyFormVisible === comment._id && (
                                                                     <form onSubmit={(e) => handleReplySubmit(e, comment._id)} className=" mt-2 ml-10">
                                                                         <div className="flex items-center gap-3">
                                                                             <div onClick={() => setReplyFormVisible(null)} className="text-xs text-blue-400 cursor-pointer mt-1 hover:underline">
                                                                                 Đóng</div>
                                                                             <img
-                                                                                src={authUser.profilePic}
+                                                                                src={authUser.profilePic !== '' ? authUser.profilePic : DefaultUser}
                                                                                 alt="your-avatar"
                                                                                 className="w-8 h-8 rounded-full object-cover"
                                                                             />
@@ -320,15 +424,15 @@ const ProfileFriend = () => {
                                                                             </div>
                                                                         )}
                                                                     </form>
-                                                                )} */}
+                                                                )}
                                                                 {/* edit form */}
-                                                                {/* {editFormVisible === comment._id && (
+                                                                {editFormVisible === comment._id && (
                                                                     <form onSubmit={(e) => handleEditCommentSubmit(e, comment._id)} className=" mt-2 ml-10">
                                                                         <div className="flex items-center gap-3">
                                                                             <div onClick={() => setEditFormVisible(null)} className="text-xs text-gray-400 cursor-pointer mt-1 hover:underline">
                                                                                 Đóng</div>
                                                                             <img
-                                                                                src={authUser.profilePic}
+                                                                                src={authUser.profilePic !== '' ? authUser.profilePic : DefaultUser}
                                                                                 alt="your-avatar"
                                                                                 className="w-8 h-8 rounded-full object-cover"
                                                                             />
@@ -362,14 +466,14 @@ const ProfileFriend = () => {
                                                                             </div>
                                                                         )}
                                                                     </form>
-                                                                )} */}
+                                                                )}
                                                                 {/* Replies */}
-                                                                {/* {comment.replies?.length > 0 && (
+                                                                {comment.replies?.length > 0 && (
                                                                     <div className="mt-2 ml-6 space-y-2">
                                                                         {comment.replies.map((reply) => (
                                                                             <div key={reply._id} className="flex items-start gap-2">
                                                                                 <img
-                                                                                    src={reply.userComment.profilePic}
+                                                                                    src={reply.userComment.profilePic !== '' ? reply.userComment.profilePic: DefaultUser}
                                                                                     alt="avatar"
                                                                                     className="w-7 h-7 rounded-full object-cover"
                                                                                 />
@@ -392,7 +496,7 @@ const ProfileFriend = () => {
                                                                             </div>
                                                                         ))}
                                                                     </div>
-                                                                )} */}
+                                                                )}
                                                             </div>
                                                         </div>)
                                                     })}
@@ -428,7 +532,7 @@ function CaptionToggle({ caption }) {
         <div>
             <p
                 ref={captionRef}
-                className={`text-base whitespace-pre-line ${!expanded ? "line-clamp-3" : ""}`}
+                className={`text-base mt-4 whitespace-pre-line ${!expanded ? "line-clamp-3" : ""}`}
             >
                 {caption}
             </p>

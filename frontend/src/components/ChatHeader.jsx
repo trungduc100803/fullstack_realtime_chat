@@ -1,4 +1,4 @@
-import { X } from "lucide-react";
+import { X, SquareUser } from "lucide-react";
 import { useAuthStore } from "../store/useAuthStore";
 import { useChatStore } from "../store/useChatStore";
 import { Link } from "react-router-dom";
@@ -32,9 +32,16 @@ const ChatHeader = () => {
         {/* user profile */}
 
         {/* Close button */}
+        <div>
+        <Link className="mr-3" to={`/profile/${selectedUser.email}/${selectedUser._id}`}>
+        <button onClick={() => setSelectedUser(null)}>
+          <SquareUser/>
+        </button>
+        </Link>
         <button onClick={() => setSelectedUser(null)}>
           <X />
         </button>
+        </div>
       </div>
     </div>
   );
