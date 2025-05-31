@@ -97,19 +97,12 @@ export const useChatStore = create((set, get) => ({
   },
 
   subscribeToMessagesGroup: () => {
+    const socket = useAuthStore.getState().socket;
     const { selectedGroup } = get();
     if (!selectedGroup) return;
 
-    const socket = useAuthStore.getState().socket;
-    // dang vuong o day, cần nhận được thông báo tin nhăn
-    // selectedGroup
     socket.on("newMessageGroup", (newMessage) => {
-      // const isMessageSentFromSelectedUser = newMessage.senderId === selectedGroup._id;
-      // if (!isMessageSentFromSelectedUser) return;
-      console.log(newMessage)
       if (newMessage.groupId !== selectedGroup._id) return;
-
-
       set({
         messagesGroup: [...get().messagesGroup, newMessage],
       });

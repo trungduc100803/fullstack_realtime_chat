@@ -8,7 +8,7 @@ import { Image } from 'antd'
 import PostForm from "../components/PostForm";
 import { axiosInstance } from "../lib/axios";
 import DefaultUser from '../constants/default_user.jpg'
-import { formatMessageTime } from "../lib/utils";
+import {  getTimeAgo } from "../lib/utils";
 
 const ProfilePage = () => {
   const { authUser, isUpdatingProfile, updateProfile } = useAuthStore();
@@ -374,7 +374,7 @@ const ProfilePage = () => {
                         </div>
                         <div className="" >
                           <p className=" text-sm font-bold">{post.userPost.fullName}</p>
-                          <p className=" time text-sm">{formatMessageTime(post.createdAt)}</p>
+                          <p className=" time text-sm">{getTimeAgo(post.createdAt)}</p>
                         </div>
                       </div>
                       <p onClick={() => showModalDeletePost(post._id)} className="justify-end cursor-pointer">
@@ -492,11 +492,14 @@ const ProfilePage = () => {
                                       Sửa                               </div>
                                     <div onClick={() => handleOpenModalDeleteComment(comment._id)} className="text-xs text-red-400 cursor-pointer mt-1 hover:underline">
                                       Xóa                                </div>
+                                    <p className="text-xs ml-3 mt-1">{getTimeAgo(comment.createdAt)}</p>
                                   </div>
                                 ) :
                                   <div className="flex">
+
                                     <div onClick={() => setReplyFormVisible(comment._id)} className="text-xs mr-3 text-blue-400 cursor-pointer mt-1 hover:underline">
                                       Trả lời</div>
+                                    <p className="text-xs ml-3 mt-1">{getTimeAgo(comment.createdAt)}</p>
                                   </div>
                               }
 
@@ -596,6 +599,8 @@ const ProfilePage = () => {
                                         <div className="text-sm text-gray-300 whitespace-pre-line">
                                           {reply.content}
                                         </div>
+                                    <p className="text-xs  mt-1">{getTimeAgo(reply.createdAt)}</p>
+
                                         {reply.image && (
                                           <img
                                             src={reply.image}

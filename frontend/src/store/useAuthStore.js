@@ -99,6 +99,11 @@ export const useAuthStore = create((set, get) => ({
     socket.on("getOnlineUsers", (userIds) => {
       set({ onlineUsers: userIds });
     });
+
+     // Join vào các phòng chat group
+  authUser.groups?.forEach((group) => {
+    socket.emit("joinGroup", group); // Server sẽ handle join từng groupId
+  });
   },
   disconnectSocket: () => {
     if (get().socket?.connected) get().socket.disconnect();

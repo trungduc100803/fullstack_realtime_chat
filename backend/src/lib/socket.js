@@ -24,6 +24,10 @@ io.on("connection", (socket) => {
   const userId = socket.handshake.query.userId;
   if (userId) userSocketMap[userId] = socket.id;
 
+  socket.on("joinGroup", (groupId) => {
+    socket.join(groupId); // join group chat room
+  });
+
   // io.emit() is used to send events to all the connected clients
   io.emit("getOnlineUsers", Object.keys(userSocketMap));
 

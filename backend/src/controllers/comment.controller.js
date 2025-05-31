@@ -52,7 +52,7 @@ export const getCommentsForPost = async (req, res) => {
       });
 
 
-    res.status(200).json(post.comments);
+    res.status(200).json(post.comments.reverse());
   } catch (err) {
     res.status(500).json({ error: "Không thể lấy bình luận", message: err.message });
   }

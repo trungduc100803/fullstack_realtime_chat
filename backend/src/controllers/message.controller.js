@@ -417,16 +417,14 @@ export const sendMessageGroup = async (req, res) => {
       image: imageUrl,
     });
     await newMessage.save();
+    // 
+    const populatedMessage = await Message.findById(newMessage._id)
+      .populate("senderId", "fullName profilePic");
 
-    // Gửi real-time đến các thành viên trừ người gửi
-    group.members.forEach((member) => {
-      console.log(member)
-      if (!member._id.equals(senderId)) {
-        io.to(member._id.toString()).emit("newMessageGroup", newMessage);
-      }
-    });
+      // Gửi đến tất cả thành viên trong group qua room
+    io.to(groupReceiverId).emit("newMessageGroup", populatedMessage);
 
-    return res.status(201).json(newMessage);
+    return res.status(201).json(populatedMessage);
   } catch (error) {
     console.error("Error in sendMessageGroup:", error.message);
     res.status(500).json({ error: "Internal server error" });
