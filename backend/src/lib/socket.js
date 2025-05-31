@@ -23,6 +23,13 @@ io.on("connection", (socket) => {
 
   const userId = socket.handshake.query.userId;
   if (userId) userSocketMap[userId] = socket.id;
+if (userId) {
+    socket.join(userId); // join room theo userId
+  }
+  // Cho phép join thêm room nếu cần
+  socket.on("joinRoom", (roomId) => {
+    socket.join(roomId);
+  });
 
   socket.on("joinGroup", (groupId) => {
     socket.join(groupId); // join group chat room

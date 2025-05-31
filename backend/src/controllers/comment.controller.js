@@ -1,5 +1,7 @@
 import Post from "../models/post.model.js";
 import Comment from "../models/comment.model.js";
+import User from "../models/user.model.js";
+import {  io } from "../lib/socket.js";
 
 
 export const createComment = async (req, res) => {
@@ -21,6 +23,17 @@ export const createComment = async (req, res) => {
       $push: { comments: newComment._id }
     });
 
+    const user = await User.findById(userId);
+user.friends.forEach(friendId => {
+  io.to(friendId.toString()).emit("newComment", {
+    comment: newComment,
+    from: {
+      _id: user._id,
+      fullName: user.fullName,
+      profilePic: user.profilePic,
+    },
+  });
+});
     res.status(201).json(newComment);
   } catch (err) {
     res.status(500).json({ error: "Không thể tạo bình luận", message: err.message });
@@ -77,6 +90,19 @@ export const replyToComment = async (req, res) => {
     await Comment.findByIdAndUpdate(parentCommentId, {
       $push: { replies: newReply._id }
     });
+
+    // Gửi realtime cho tất cả bạn bè của người comment
+const user = await User.findById(userId);
+user.friends.forEach(friendId => {
+  io.to(friendId.toString()).emit("newReply", {
+    comment: newReply,
+    from: {
+      _id: user._id,
+      fullName: user.fullName,
+      profilePic: user.profilePic,
+    },
+  });
+});
 
     res.status(201).json(newReply);
   } catch (err) {

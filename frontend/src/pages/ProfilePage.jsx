@@ -32,6 +32,23 @@ const ProfilePage = () => {
   const fileInputRef = useRef(null);
 
 
+  useEffect(() => {
+  const socket = useAuthStore.getState().socket;
+
+  if (socket) {
+    socket.on("newPost", (post) => {
+      toast.success("Bạn bè vừa đăng bài!");
+      getpost(); // hoặc push trực tiếp vào `setPosts([...posts, post])`
+    });
+
+    socket.on("newComment", (data) => {
+      toast.success(`${data.from.fullName} vừa bình luận!`);
+      fetchCommentsForAllPosts();
+    });
+  }
+}, []);
+
+
   const handleCommentChange = (e, postId) => {
     setCommentsByPost(prev => ({
       ...prev,
