@@ -294,88 +294,6 @@ export const sendMessage = async (req, res) => {
   }
 };
 
-// export const getMessagesGroups = async (req, res) => {
-//   try {
-//     const { id: groupToChatId } = req.params;
-//     const myId = req.user._id;
-
-//     const group = await Group.findById(groupToChatId)
-//     const arr = await Promise.all(
-//       group.members
-//         .filter(m => !m._id.equals(myId)) // Bỏ qua chính mình
-//         .map(async (m) => {
-//           console.log('Checking between:', myId, 'and', m._id);
-//           const messages = await Message.find({
-//             $or: [
-//               { senderId: myId, receiverId: m._id },
-//               { senderId: m._id, receiverId: myId },
-//             ],
-//           });
-//           console.log('Found messages:', messages.length);
-//           return messages;
-//         })
-//     );
-
-//     const allMessages = arr.flat();
-
-
-//     res.status(200).json(allMessages);
-//   } catch (error) {
-//     console.log("Error in getMessages controller: ", error.message);
-//     res.status(500).json({ error: "Internal server error" });
-//   }
-// };
-
-
-
-// export const sendMessageGroup = async (req, res) => {
-//   try {
-//     const { text, image } = req.body;
-//     const { id: groupReceiverId } = req.params;
-//     const senderId = req.user._id;
-
-//     let imageUrl;
-//     if (image) {
-//       // Upload base64 image to cloudinary
-//       const uploadResponse = await cloudinary.uploader.upload(image);
-//       imageUrl = uploadResponse.secure_url;
-//     }
-
-//     const group = await Group.findById(groupReceiverId)
-//     // bo nguoi gui ddi
-//     const index = group.members.indexOf(senderId);
-//     if (index !== -1) {
-//       group.members.splice(index, 1);
-//     }
-//     // tao message cho cac thanh vien
-//     const arr = await Promise.all(
-//       group.members.map(async m => {
-//         const newMessage = new Message({
-//           senderId,
-//           receiverId: m._id,
-//           text,
-//           image: imageUrl,
-//         });
-//         await newMessage.save();
-
-//         return newMessage
-//       })
-//     );
-
-//     group.members.forEach(m => {
-//       if (m._id) {
-//         io.to(m._id).emit("newMessageGroup", arr);
-//       }
-//     })
-//     // const receiverSocketId = getReceiverSocketId(receiverId);
-
-//     res.status(201).json(arr);
-//   } catch (error) {
-//     console.log("Error in sendMessage controller: ", error.message);
-//     res.status(500).json({ error: "Internal server error" });
-//   }
-// };
-
 export const getMessagesGroups = async (req, res) => {
   try {
     const { id: groupId } = req.params;
@@ -421,7 +339,7 @@ export const sendMessageGroup = async (req, res) => {
     const populatedMessage = await Message.findById(newMessage._id)
       .populate("senderId", "fullName profilePic");
 
-      // Gửi đến tất cả thành viên trong group qua room
+    // Gửi đến tất cả thành viên trong group qua room
     io.to(groupReceiverId).emit("newMessageGroup", populatedMessage);
 
     return res.status(201).json(populatedMessage);
@@ -490,6 +408,48 @@ export const acceptAddFriend = async (req, res) => {
     })
   } catch (error) {
     console.log("Error in getMessages controller: ", error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+
+export const deleteFriend = async (req, res) => {
+  try {
+    const loggedInUserId = req.user._id
+    const { userIdDeleteFriend } = req.body
+
+    const user = await User.findById(loggedInUserId)
+    const userDeleteFriend = await User.findById(userIdDeleteFriend)
+    if (!user) {
+      return res.status(400).json({
+        message: 'ko tim thay user'
+      })
+    }
+
+    const index1 = user.friends.indexOf(userIdDeleteFriend);
+    const index2 = user.conversation.indexOf(userIdDeleteFriend);
+    const index3 = userDeleteFriend.friends.indexOf(loggedInUserId);
+    const index4 = userDeleteFriend.conversation.indexOf(loggedInUserId);
+    if (index1 !== -1) {
+      user.friends.splice(index1, 1)
+    }
+    if (index2 !== -1) {
+      user.conversation.splice(index2, 1)
+    }
+    if (index3 !== -1) {
+      userDeleteFriend.friends.splice(index3, 1)
+    }
+    if (index4 !== -1) {
+      userDeleteFriend.conversation.splice(index4, 1)
+    }
+    await userDeleteFriend.save()
+    await user.save()
+
+    return res.status(200).json({
+      message: 'accept',
+    })
+  } catch (error) {
+    console.log("Error in deleteFriend controller: ", error.message);
     res.status(500).json({ error: "Internal server error" });
   }
 }

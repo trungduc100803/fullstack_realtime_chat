@@ -23,92 +23,93 @@ const ProfileFriend = () => {
     const [commentsByPost, setCommentsByPost] = useState({});
     const [imagesByPost, setImagesByPost] = useState({});
     const fileInputRefs = useRef(null);
-  const [replyFormVisible, setReplyFormVisible] = useState(null); // Lưu comment._id của comment đang mở form
-  const [replyImage, setReplyImage] = useState('');
-  const [replyContent, setReplyContent] = useState('');
-  const fileInputRef = useRef(null);
+    const [replyFormVisible, setReplyFormVisible] = useState(null); // Lưu comment._id của comment đang mở form
+    const [replyImage, setReplyImage] = useState('');
+    const [replyContent, setReplyContent] = useState('');
+    const fileInputRef = useRef(null);
     const [editContent, setEditContent] = useState('');
-  const [editFormVisible, setEditFormVisible] = useState(null);
-  const [editImage, setEditImage] = useState('');
-  const editContentRef = useRef(null);
-  const [visibleImageBeforeEditComment, setVisibleImageBeforeEditComment] = useState(false)
-  const [deleteFormVisible, setDeleteFormVisible] = useState(null);
+    const [editFormVisible, setEditFormVisible] = useState(null);
+    const [editImage, setEditImage] = useState('');
+    const editContentRef = useRef(null);
+    const [visibleImageBeforeEditComment, setVisibleImageBeforeEditComment] = useState(false)
+    const [deleteFormVisible, setDeleteFormVisible] = useState(null);
+    const { email, id } = useParams()
 
-const handleOpenModalDeleteComment = (idComment) => {
-    setDeleteFormVisible(idComment)
-    document.getElementById('modalDeletecomment').showModal()
-  }
-
- const handleCloseModalDeleteComment = () => {
-    document.getElementById('deletecomment').click()
-    setDeleteFormVisible(null)
-  }
-
-  const deleteComment = async () => {
-    await axiosInstance.delete(`/comments/delete-comment/${deleteFormVisible}`)
-    handleCloseModalDeleteComment()
-    fetchCommentsForAllPosts()
-  }
-
-  const handleImageChangeEdit = (e) => {
-    const file = e.target.files[0]
-    setVisibleImageBeforeEditComment(true)
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setEditImage(reader.result);
-    };
-    reader.readAsDataURL(file); // chuyển file ảnh thành base64
-  };
-
-   const handleEditCommentSubmit = async (e, CommentId) => {
-    e.preventDefault();
-    try {
-      await axiosInstance.put(`/comments/edit-comment/${CommentId}`, {
-        content: editContent,
-        image: editImage
-      });
-      // Reset
-      setEditContent('');
-      setEditImage('');
-      setEditFormVisible(null);
-      setVisibleImageBeforeEditComment(false)
-      // Gọi hàm reload comment (tùy vào bạn có custom hook hoặc re-fetch lại)
-      fetchCommentsForAllPosts()
-    } catch (error) {
-      console.error('Lỗi khi gửi phản hồi:', error);
+    const handleOpenModalDeleteComment = (idComment) => {
+        setDeleteFormVisible(idComment)
+        document.getElementById('modalDeletecomment').showModal()
     }
-  };
 
-  const handleReplySubmit = async (e, parentCommentId) => {
-    e.preventDefault();
-
-    try {
-      await axiosInstance.post(`/comments/reply/${parentCommentId}`, {
-        content: replyContent,
-        image: replyImage
-      });
-      // Reset
-      setReplyContent('');
-      setReplyImage('');
-      setReplyFormVisible(null);
-      // Gọi hàm reload comment (tùy vào bạn có custom hook hoặc re-fetch lại)
-      fetchCommentsForAllPosts()
-    } catch (error) {
-      console.error('Lỗi khi gửi phản hồi:', error);
+    const handleCloseModalDeleteComment = () => {
+        document.getElementById('deletecomment').click()
+        setDeleteFormVisible(null)
     }
-  };
 
-   const handleImageChangeReply = (e) => {
-    const file = e.target.files[0]
+    const deleteComment = async () => {
+        await axiosInstance.delete(`/comments/delete-comment/${deleteFormVisible}`)
+        handleCloseModalDeleteComment()
+        fetchCommentsForAllPosts()
+    }
 
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setReplyImage(reader.result);
+    const handleImageChangeEdit = (e) => {
+        const file = e.target.files[0]
+        setVisibleImageBeforeEditComment(true)
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setEditImage(reader.result);
+        };
+        reader.readAsDataURL(file); // chuyển file ảnh thành base64
     };
-    reader.readAsDataURL(file); // chuyển file ảnh thành base64
-  };
+
+    const handleEditCommentSubmit = async (e, CommentId) => {
+        e.preventDefault();
+        try {
+            await axiosInstance.put(`/comments/edit-comment/${CommentId}`, {
+                content: editContent,
+                image: editImage
+            });
+            // Reset
+            setEditContent('');
+            setEditImage('');
+            setEditFormVisible(null);
+            setVisibleImageBeforeEditComment(false)
+            // Gọi hàm reload comment (tùy vào bạn có custom hook hoặc re-fetch lại)
+            fetchCommentsForAllPosts()
+        } catch (error) {
+            console.error('Lỗi khi gửi phản hồi:', error);
+        }
+    };
+
+    const handleReplySubmit = async (e, parentCommentId) => {
+        e.preventDefault();
+
+        try {
+            await axiosInstance.post(`/comments/reply/${parentCommentId}`, {
+                content: replyContent,
+                image: replyImage
+            });
+            // Reset
+            setReplyContent('');
+            setReplyImage('');
+            setReplyFormVisible(null);
+            // Gọi hàm reload comment (tùy vào bạn có custom hook hoặc re-fetch lại)
+            fetchCommentsForAllPosts()
+        } catch (error) {
+            console.error('Lỗi khi gửi phản hồi:', error);
+        }
+    };
+
+    const handleImageChangeReply = (e) => {
+        const file = e.target.files[0]
+
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setReplyImage(reader.result);
+        };
+        reader.readAsDataURL(file); // chuyển file ảnh thành base64
+    };
 
     const handleImageChange = (e, postId) => {
         const file = e.target.files[0]
@@ -146,7 +147,6 @@ const handleOpenModalDeleteComment = (idComment) => {
         if (posts.length > 0) fetchCommentsForAllPosts();
     }, [posts]);
 
-    const { email, id } = useParams()
     const getUser = async () => {
         const res = await axiosInstance.post('/messages/searchUser', { userEmailSearch: email })
         setUser(res.data.userSearch)
@@ -191,18 +191,18 @@ const handleOpenModalDeleteComment = (idComment) => {
     }
 
     const handleSubmit = async (e, postId) => {
-    e.preventDefault()
-    const content = commentsByPost[postId] || '';
-    const image = imagesByPost[postId] || '';
+        e.preventDefault()
+        const content = commentsByPost[postId] || '';
+        const image = imagesByPost[postId] || '';
 
-    await axiosInstance.post(`/comments/create-comment/${postId}`, {
-      content, image
-    });
-    fetchCommentsForAllPosts()
-    // Clear sau khi submit
-    setCommentsByPost(prev => ({ ...prev, [postId]: '' }));
-    setImagesByPost(prev => ({ ...prev, [postId]: null }));
-  }
+        await axiosInstance.post(`/comments/create-comment/${postId}`, {
+            content, image
+        });
+        fetchCommentsForAllPosts()
+        // Clear sau khi submit
+        setCommentsByPost(prev => ({ ...prev, [postId]: '' }));
+        setImagesByPost(prev => ({ ...prev, [postId]: null }));
+    }
 
     return (
         <div className="h-screen pt-20">
@@ -231,19 +231,19 @@ const handleOpenModalDeleteComment = (idComment) => {
                 </div>
             </div>
             <dialog id="modalDeletecomment" className="modal">
-        <div className="modal-box">
-          <form method="dialog">
-            {/* if there is a button in form, it will close the modal */}
-            <button id="deletecomment" className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
-          </form>
-          <h3 className="font-bold text-lg">Thông báo</h3>
-          <div className="pt-6 pb-6">Bạn có chắc chắn muốn xóa bình luận?</div>
-          <div className="flex items-center justify-end">
-            <button onClick={handleCloseModalDeleteComment} className="btn btn-success mr-3">Hủy bỏ</button>
-            <button onClick={deleteComment} className="btn btn-error">Xóa</button>
-          </div>
-        </div>
-      </dialog>
+                <div className="modal-box">
+                    <form method="dialog">
+                        {/* if there is a button in form, it will close the modal */}
+                        <button id="deletecomment" className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+                    </form>
+                    <h3 className="font-bold text-lg">Thông báo</h3>
+                    <div className="pt-6 pb-6">Bạn có chắc chắn muốn xóa bình luận?</div>
+                    <div className="flex items-center justify-end">
+                        <button onClick={handleCloseModalDeleteComment} className="btn btn-success mr-3">Hủy bỏ</button>
+                        <button onClick={deleteComment} className="btn btn-error">Xóa</button>
+                    </div>
+                </div>
+            </dialog>
             <div className="mt-8">
                 <div className="max-w-6xl mx-auto p-4 py-8 mt-2 rounded-xl">
                     {/* post */}
@@ -352,7 +352,7 @@ const handleOpenModalDeleteComment = (idComment) => {
                                                     {postComments[post._id].map((comment) => {
                                                         return (<div key={comment._id} className="flex items-start gap-3" >
                                                             <img
-                                                                src={comment.userComment.profilePic  !== '' ? comment.userComment.profilePic : DefaultUser}
+                                                                src={comment.userComment.profilePic !== '' ? comment.userComment.profilePic : DefaultUser}
                                                                 alt="avatar"
                                                                 className="w-9 h-9 rounded-full object-cover"
                                                             />
@@ -381,14 +381,14 @@ const handleOpenModalDeleteComment = (idComment) => {
                                                                                 Sửa                               </div>
                                                                             <div onClick={() => handleOpenModalDeleteComment(comment._id)} className="text-xs text-red-400 cursor-pointer mt-1 hover:underline">
                                                                                 Xóa                                </div>
-                                    <p className="text-xs ml-3 mt-1">{getTimeAgo(comment.createdAt)}</p>
+                                                                            <p className="text-xs ml-3 mt-1">{getTimeAgo(comment.createdAt)}</p>
                                                                         </div>
                                                                     ) :
                                                                         <div className="flex">
 
                                                                             <div onClick={() => setReplyFormVisible(comment._id)} className="text-xs mr-3 text-blue-400 cursor-pointer mt-1 hover:underline">
                                                                                 Trả lời</div>
-                                    <p className="text-xs ml-3 mt-1">{getTimeAgo(comment.createdAt)}</p>
+                                                                            <p className="text-xs ml-3 mt-1">{getTimeAgo(comment.createdAt)}</p>
                                                                         </div>
                                                                 }
 
@@ -477,7 +477,7 @@ const handleOpenModalDeleteComment = (idComment) => {
                                                                         {comment.replies.map((reply) => (
                                                                             <div key={reply._id} className="flex items-start gap-2">
                                                                                 <img
-                                                                                    src={reply.userComment.profilePic !== '' ? reply.userComment.profilePic: DefaultUser}
+                                                                                    src={reply.userComment.profilePic !== '' ? reply.userComment.profilePic : DefaultUser}
                                                                                     alt="avatar"
                                                                                     className="w-7 h-7 rounded-full object-cover"
                                                                                 />
@@ -535,6 +535,7 @@ function CaptionToggle({ caption }) {
 
     return (
         <div>
+
             <p
                 ref={captionRef}
                 className={`text-base mt-4 whitespace-pre-line ${!expanded ? "line-clamp-3" : ""}`}
@@ -553,6 +554,7 @@ function CaptionToggle({ caption }) {
 }
 
 const RelationshipStatus = ({ relationship, userIdAddFriend, getUser, getRelationship }) => {
+    const { id } = useParams()
 
     const addFriend = async () => {
         await axiosInstance.post('/messages/addfriend', { userIdAddFriend })
@@ -565,6 +567,16 @@ const RelationshipStatus = ({ relationship, userIdAddFriend, getUser, getRelatio
         getUser()
         getRelationship()
     }
+
+    const handleCloseModalDeleteFriend = () => {
+        document.getElementById('deleteFriend').click()
+    }
+
+    const deleteFriend = async () => {
+        await axiosInstance.post('/messages/delete-friend', { userIdDeleteFriend: id })
+        getUser()
+        getRelationship()
+    }
     switch (relationship) {
         case 'Người lạ':
             return <button onClick={addFriend} className="btn btn-sm gap-2 mr-4 border-solid border-gray-400" >
@@ -572,10 +584,30 @@ const RelationshipStatus = ({ relationship, userIdAddFriend, getUser, getRelatio
                 <span className="hidden sm:inline">Kết bạn</span>
             </button>
         case 'Bạn bè':
-            return <button className="btn btn-sm gap-2 mr-4 border-solid border-gray-400" >
-                <UserCheck className="size-5" />
-                <span className="hidden sm:inline">Bạn bè</span>
-            </button>
+            return <div>
+                <dialog id="modalDeleteFriend" className="modal">
+                    <div className="modal-box">
+                        <form method="dialog">
+                            {/* if there is a button in form, it will close the modal */}
+                            <button id="deleteFriend" className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+                        </form>
+                        <h3 className="font-bold text-lg">Thông báo</h3>
+                        <div className="pt-6 pb-6">Bạn có chắc chắn muốn hủy kết bạn?</div>
+                        <div className="flex items-center justify-end">
+                            <button onClick={handleCloseModalDeleteFriend} className="btn btn-success mr-3">Hủy bỏ</button>
+                            <button onClick={deleteFriend} className="btn btn-error">Xóa</button>
+                        </div>
+                    </div>
+                </dialog>
+                <button className="btn btn-sm gap-2 mr-4 border-solid border-gray-400" >
+                    <UserCheck className="size-5" />
+                    <span className="hidden sm:inline">Bạn bè</span>
+                </button>
+                <button onClick={() => document.getElementById('modalDeleteFriend').showModal()} className="btn btn-sm gap-2 mr-4 border-solid border-gray-400" >
+                    <UserRoundX className="size-5" />
+                    <span className="hidden sm:inline">Hủy kết bạn</span>
+                </button>
+            </div>
         case 'Đã gửi lời mời kết bạn':
             return <button onClick={cancelAddFriend} className="btn btn-sm gap-2 mr-4 border-solid border-gray-400" >
                 <UserRoundX className="size-5" />

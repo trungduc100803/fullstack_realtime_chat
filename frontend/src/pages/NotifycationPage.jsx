@@ -43,7 +43,7 @@ export default function NotifycationPage() {
                     <p>Không có thông báo</p>
                 ) : (
                     notifications.map((n) => (
-                        <div className={`flex w-full items-center hover:bg-base-200 rounded pl-3 pr-3 ${!n.isRead ? "bg-base-100" : ""}`}>
+                        <div key={n._id} className={`flex w-full items-center hover:bg-base-200 rounded pl-3 pr-3 ${!n.isRead ? "bg-base-100" : ""}`}>
                             <img
                                 src={n.sender.profilePic || "/avatar.png"}
                                 alt={n.sender.fullName}

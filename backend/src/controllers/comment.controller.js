@@ -1,8 +1,8 @@
 import Post from "../models/post.model.js";
 import Comment from "../models/comment.model.js";
 import User from "../models/user.model.js";
-import {  io } from "../lib/socket.js";
-
+import { io } from "../lib/socket.js";
+import { notifyNewComment } from './notification.controller.js'
 
 export const createComment = async (req, res) => {
   try {
@@ -19,21 +19,15 @@ export const createComment = async (req, res) => {
     await newComment.save();
 
     // Push comment vào bài viết
+    const post = await Post.findById(postId)
     await Post.findByIdAndUpdate(postId, {
       $push: { comments: newComment._id }
     });
 
     const user = await User.findById(userId);
-user.friends.forEach(friendId => {
-  io.to(friendId.toString()).emit("newComment", {
-    comment: newComment,
-    from: {
-      _id: user._id,
-      fullName: user.fullName,
-      profilePic: user.profilePic,
-    },
-  });
-});
+    if (post.userPost._id.toString() !== userId) {
+      notifyNewComment({ senderId: userId, postOwnerId: post.userPost._id.toString(), postId: post._id, commentId: newComment._id })
+    }
     res.status(201).json(newComment);
   } catch (err) {
     res.status(500).json({ error: "Không thể tạo bình luận", message: err.message });
@@ -92,17 +86,17 @@ export const replyToComment = async (req, res) => {
     });
 
     // Gửi realtime cho tất cả bạn bè của người comment
-const user = await User.findById(userId);
-user.friends.forEach(friendId => {
-  io.to(friendId.toString()).emit("newReply", {
-    comment: newReply,
-    from: {
-      _id: user._id,
-      fullName: user.fullName,
-      profilePic: user.profilePic,
-    },
-  });
-});
+    const user = await User.findById(userId);
+    user.friends.forEach(friendId => {
+      io.to(friendId.toString()).emit("newReply", {
+        comment: newReply,
+        from: {
+          _id: user._id,
+          fullName: user.fullName,
+          profilePic: user.profilePic,
+        },
+      });
+    });
 
     res.status(201).json(newReply);
   } catch (err) {

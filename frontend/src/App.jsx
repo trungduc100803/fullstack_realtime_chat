@@ -6,7 +6,7 @@ import LoginPage from "./pages/LoginPage";
 import SettingsPage from "./pages/SettingsPage";
 import ProfilePage from "./pages/ProfilePage";
 
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "./store/useAuthStore";
 import { useChatStore } from "./store/useChatStore";
 import { useThemeStore } from "./store/useThemeStore";
@@ -16,11 +16,17 @@ import { Loader } from "lucide-react";
 import { Toaster } from "react-hot-toast";
 import ProfileFriend from "./pages/ProfileFriend";
 import NotifycationPage from "./pages/NotifycationPage";
+import RequestFriendPage from "./pages/RequestFriendPage";
+import PostDetailPage from "./pages/PostDetailPage";
 
 const App = () => {
   const { authUser, checkAuth, isCheckingAuth, onlineUsers } = useAuthStore();
   const { subcribeAddFriend } = useChatStore();
   const { theme } = useThemeStore();
+
+  const location = useLocation();
+  const state = location.state;
+  const background = state?.background;
 
   useEffect(() => {
     checkAuth();
@@ -41,15 +47,23 @@ const App = () => {
     <div data-theme={theme}>
       <Navbar />
 
-      <Routes>
+      <Routes location={background || location}>
         <Route path="/" element={authUser ? <HomePage /> : <Navigate to="/login" />} />
         <Route path="/signup" element={!authUser ? <SignUpPage /> : <Navigate to="/" />} />
         <Route path="/login" element={!authUser ? <LoginPage /> : <Navigate to="/" />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/notifycation" element={<NotifycationPage />} />
+        <Route path="/request-friend" element={<RequestFriendPage />} />
         <Route path="/profile" element={authUser ? <ProfilePage /> : <Navigate to="/login" />} />
         <Route path="/profile/:email/:id" element={authUser ? <ProfileFriend /> : <Navigate to="/login" />} />
+        <Route path="/post/:id" element={<PostDetailPage />} />
       </Routes>
+
+      {background && (
+        <Routes>
+          <Route path="/post/:id" element={<PostDetailPage />} />
+        </Routes>
+      )}
 
       <Toaster />
     </div>
