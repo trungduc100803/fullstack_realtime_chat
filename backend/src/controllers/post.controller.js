@@ -2,7 +2,8 @@ import User from '../models/user.model.js'
 import Post from '../models/post.model.js'
 import path from "path";
 import fs from 'fs';
-import {  io } from "../lib/socket.js";
+import { io, userSocketMap } from "../lib/socket.js";
+import { notifyNewPost } from './notification.controller.js'
 
 const convertToBase64 = (filename) => {
     const filePath = path.join(process.cwd(), 'uploads', filename);
@@ -21,18 +22,22 @@ export const createPost = async (req, res) => {
         });
 
         await newPost.save();
+        notifyNewPost({ senderId: userPost, postId: newPost._id })
         // Gửi realtime cho tất cả bạn bè của người tạo
-const user = await User.findById(userPost);
-user.friends.forEach(friendId => {
-  io.to(friendId.toString()).emit("newPost", {
-    ...newPost.toObject(),
-    userPost: {
-      _id: user._id,
-      fullName: user.fullName,
-      profilePic: user.profilePic,
-    },
-  });
-});
+        // const user = await User.findById(userPost);
+        // user.friends.forEach(friendId => {
+        //     const socketId = userSocketMap[friendId.toString()];
+        //     if (socketId) {
+        //         io.to(socketId).emit("newPost", {
+        //             ...newPost.toObject(),
+        //             userPost: {
+        //                 _id: user._id,
+        //                 fullName: user.fullName,
+        //                 profilePic: user.profilePic,
+        //             },
+        //         });
+        //     }
+        // });
         res.status(201).json(newPost);
     } catch (err) {
         res.status(500).json({ error: "Tạo bài viết thất bại", message: err.message });

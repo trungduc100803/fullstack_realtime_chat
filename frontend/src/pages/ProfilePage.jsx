@@ -8,7 +8,8 @@ import { Image } from 'antd'
 import PostForm from "../components/PostForm";
 import { axiosInstance } from "../lib/axios";
 import DefaultUser from '../constants/default_user.jpg'
-import {  getTimeAgo } from "../lib/utils";
+import { getTimeAgo } from "../lib/utils";
+import toast from "react-hot-toast";
 
 const ProfilePage = () => {
   const { authUser, isUpdatingProfile, updateProfile } = useAuthStore();
@@ -30,23 +31,6 @@ const ProfilePage = () => {
   const [replyImage, setReplyImage] = useState('');
   const [replyContent, setReplyContent] = useState('');
   const fileInputRef = useRef(null);
-
-
-  useEffect(() => {
-  const socket = useAuthStore.getState().socket;
-
-  if (socket) {
-    socket.on("newPost", (post) => {
-      toast.success("Bạn bè vừa đăng bài!");
-      getpost(); // hoặc push trực tiếp vào `setPosts([...posts, post])`
-    });
-
-    socket.on("newComment", (data) => {
-      toast.success(`${data.from.fullName} vừa bình luận!`);
-      fetchCommentsForAllPosts();
-    });
-  }
-}, []);
 
 
   const handleCommentChange = (e, postId) => {
@@ -386,7 +370,7 @@ const ProfilePage = () => {
                       <div className="flex  justify-center items-center overflow-hidden">
                         <div className="avatar">
                           <div className="w-12 mr-3 rounded-full">
-                            <img src={post.userPost.profilePic !== '' ? post.userPost.profilePic: DefaultUser} />
+                            <img src={post.userPost.profilePic !== '' ? post.userPost.profilePic : DefaultUser} />
                           </div>
                         </div>
                         <div className="" >
@@ -481,7 +465,7 @@ const ProfilePage = () => {
                         {postComments[post._id].map((comment) => {
                           return (<div key={comment._id} className="flex items-start gap-3" >
                             <img
-                              src={comment.userComment.profilePic  !== '' ? comment.userComment.profilePic : DefaultUser}
+                              src={comment.userComment.profilePic !== '' ? comment.userComment.profilePic : DefaultUser}
                               alt="avatar"
                               className="w-9 h-9 rounded-full object-cover"
                             />
@@ -616,7 +600,7 @@ const ProfilePage = () => {
                                         <div className="text-sm text-gray-300 whitespace-pre-line">
                                           {reply.content}
                                         </div>
-                                    <p className="text-xs  mt-1">{getTimeAgo(reply.createdAt)}</p>
+                                        <p className="text-xs  mt-1">{getTimeAgo(reply.createdAt)}</p>
 
                                         {reply.image && (
                                           <img

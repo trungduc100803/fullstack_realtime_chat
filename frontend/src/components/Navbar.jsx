@@ -217,8 +217,9 @@ const Navbar = () => {
               
               `}
             >
+
               <BellRing className="w-4 h-4" />
-              <span className="hidden sm:inline">Lời mời kết bạn</span>
+              <span className="hidden sm:inline">Thông báo</span>
             </Link>
 
             <Link

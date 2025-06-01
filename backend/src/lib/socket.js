@@ -23,17 +23,9 @@ io.on("connection", (socket) => {
 
   const userId = socket.handshake.query.userId;
   if (userId) userSocketMap[userId] = socket.id;
-if (userId) {
+  if (userId) {
     socket.join(userId); // join room theo userId
   }
-  // Cho phép join thêm room nếu cần
-  socket.on("joinRoom", (roomId) => {
-    socket.join(roomId);
-  });
-
-  socket.on("joinGroup", (groupId) => {
-    socket.join(groupId); // join group chat room
-  });
 
   // io.emit() is used to send events to all the connected clients
   io.emit("getOnlineUsers", Object.keys(userSocketMap));
@@ -45,4 +37,4 @@ if (userId) {
   });
 });
 
-export { io, app, server };
+export { io, app, server, userSocketMap };

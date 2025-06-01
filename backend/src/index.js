@@ -12,6 +12,7 @@ import messageRoutes from "./routes/message.route.js";
 import groupRoutes from "./routes/group.route.js";
 import postRoutes from "./routes/post.route.js";
 import commentRoutes from "./routes/comment.route.js";
+import notifyRoutes from "./routes/notify.route.js";
 import { app, server } from "./lib/socket.js";
 
 dotenv.config();
@@ -36,6 +37,7 @@ app.use("/api/messages", messageRoutes);
 app.use("/api/groups", groupRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/comments", commentRoutes);
+app.use("/api/notifications", notifyRoutes);
 
 // Tạo thư mục 'uploads' nếu chưa có
 const uploadPath = path.join(process.cwd(), "uploads");
