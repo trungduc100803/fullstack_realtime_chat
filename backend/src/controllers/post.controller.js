@@ -65,6 +65,27 @@ export const getPostsByUser = async (req, res) => {
     }
 };
 
+export const getPostsById = async (req, res) => {
+    const { id } = req.params; // hoặc req.query.userId nếu bạn dùng query string
+    console.log(id)
+    try {
+        const post = await Post.findById(id)
+        .populate("userPost", "fullName profilePic")
+            .sort({ createdAt: -1 });
+        const postsWithBase64 = {...post.toObject(), images: post.images.map(img => convertToBase64(img))}
+
+        // const postsWithBase64 = posts.map(post => ({
+        //     ...post.toObject(),
+        //     images: post.images.map(img => convertToBase64(img))
+        // }));
+
+        res.status(200).json(postsWithBase64);
+
+    } catch (err) {
+        res.status(500).json({ error: "Không lấy được bài viết", message: err.message });
+    }
+};
+
 // Like / Unlike bài viết
 export const toggleLike = async (req, res) => {
     try {

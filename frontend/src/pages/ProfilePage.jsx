@@ -22,7 +22,6 @@ const ProfilePage = () => {
   const fileInputRefs = useRef(null);
   const editContentRef = useRef(null);
   const [visibleImageBeforeEditComment, setVisibleImageBeforeEditComment] = useState(false)
-
   const [replyFormVisible, setReplyFormVisible] = useState(null); // Lưu comment._id của comment đang mở form
   const [deleteFormVisible, setDeleteFormVisible] = useState(null);
   const [editContent, setEditContent] = useState('');

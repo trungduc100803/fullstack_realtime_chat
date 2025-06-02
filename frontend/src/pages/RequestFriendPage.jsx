@@ -2,12 +2,12 @@ import React, { useEffect, useState } from 'react'
 import { axiosInstance } from '../lib/axios'
 import UserDefault from '../constants/default_user.jpg'
 import EmptyNoti from '../constants/empty_noti.webp'
-
+import { useParams} from 'react-router-dom'
 
 const RequestFriendPage = () => {
 
     const [notify, setNotify] = useState([])
-
+    
     const getNotify = async () => {
         const res = await axiosInstance.get('/messages/getNotiAddFriend')
         setNotify(res.data.notiAddFriend)

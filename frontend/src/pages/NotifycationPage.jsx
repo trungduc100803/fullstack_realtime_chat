@@ -2,7 +2,7 @@ import { useNotificationStore } from "../store/useNotificationStore";
 import { useEffect } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { vi } from "date-fns/locale";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 export default function NotifycationPage() {
     const {
@@ -12,6 +12,7 @@ export default function NotifycationPage() {
         subscribeToNotifications,
         markNotificationAsRead,
     } = useNotificationStore();
+  const location = useLocation();
 
 
     useEffect(() => {
@@ -42,28 +43,58 @@ export default function NotifycationPage() {
                 ) : notifications.length === 0 ? (
                     <p>Không có thông báo</p>
                 ) : (
-                    notifications.map((n) => (
+                    notifications.map((n) => {
+                        console.log(n.type)
+                        n && n.type == 'new_comment' || 'reply_comment'?
                         <div key={n._id} className={`flex w-full items-center hover:bg-base-200 rounded pl-3 pr-3 ${!n.isRead ? "bg-base-100" : ""}`}>
+                            <img
+                                src={n.sender.profilePic || "/avatar.png"}
+                                alt={n.sender.fullName}5555
+                                
+                                className="size-12 object-cover rounded-full"
+                            />
+                                <div className={`p-2 flex flex-1   cursor-pointer `}>
+
+                                <Link 
+                                to={`/post/${n.sender.email}/${n.sender._id}/${n.post._id}/${n.comment._id}`}
+                                state={{ background: location }} 
+                                onClick={() => markNotificationAsRead(n._id)}
+                            >
+                                <div  className="font-medium">
+                                    {n.sender.fullName}
+                                </div>
+                                {renderText(n)} <br />
+                                <span className="text-xs text-gray-500">
+                                    {formatDistanceToNow(new Date(n.createdAt), { locale: vi, addSuffix: true })}
+                                </span>
+                            </Link>
+                                </div>
+                        </div>
+                        :
+                         <div key={n._id} className={`flex w-full items-center hover:bg-base-200 rounded pl-3 pr-3 ${!n.isRead ? "bg-base-100" : ""}`}>
                             <img
                                 src={n.sender.profilePic || "/avatar.png"}
                                 alt={n.sender.fullName}
                                 className="size-12 object-cover rounded-full"
                             />
-                            <div
-                                key={n._id}
-                                className={`p-2 flex-1   cursor-pointer `}
+                                <div className={`p-2 flex flex-1   cursor-pointer `}>
+
+                                <Link 
+                                to={`/post/${n.sender.email}/${n.sender._id}/${n.post._id}`}
+                                state={{ background: location }} 
                                 onClick={() => markNotificationAsRead(n._id)}
                             >
-                                <Link to={`/profile/${n.sender.email}/${n.sender._id}`} className="font-medium">
+                                <div  className="font-medium">
                                     {n.sender.fullName}
-                                </Link>{" "}
+                                </div>
                                 {renderText(n)} <br />
                                 <span className="text-xs text-gray-500">
                                     {formatDistanceToNow(new Date(n.createdAt), { locale: vi, addSuffix: true })}
                                 </span>
-                            </div>
+                            </Link>
+                                </div>
                         </div>
-                    ))
+})
                 )}
             </div>
         </div>

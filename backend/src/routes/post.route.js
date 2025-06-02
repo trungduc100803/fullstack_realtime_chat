@@ -6,6 +6,7 @@ import {
     getPostsByUser,
     toggleLike,
     deletePost,
+    getPostsById,
 } from "../controllers/post.controller.js";
 import { protectRoute } from "../middleware/auth.middleware.js";
 
@@ -29,6 +30,7 @@ const upload = multer({ storage });
 // Định nghĩa API
 router.post("/create-post", upload.array("images", 10), createPost);
 router.get("/get-post-by-id/:userId", getPostsByUser);
+router.get("/get-post/:id", getPostsById);
 router.put("/:id/like", protectRoute, toggleLike);
 router.delete("/:id", protectRoute, deletePost);
 

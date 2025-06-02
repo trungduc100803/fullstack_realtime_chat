@@ -56,12 +56,12 @@ const App = () => {
         <Route path="/request-friend" element={<RequestFriendPage />} />
         <Route path="/profile" element={authUser ? <ProfilePage /> : <Navigate to="/login" />} />
         <Route path="/profile/:email/:id" element={authUser ? <ProfileFriend /> : <Navigate to="/login" />} />
-        <Route path="/post/:id" element={<PostDetailPage />} />
+        <Route path="/post/:email/:id/:post/:comment" element={<PostDetailPage />} />
       </Routes>
 
       {background && (
         <Routes>
-          <Route path="/post/:id" element={<PostDetailPage />} />
+          <Route path="/post/:email/:id/:post/:comment" element={<PostDetailPage />} />
         </Routes>
       )}
 
