@@ -55,7 +55,9 @@ const ChatContainer = () => {
             className={`chat ${message.senderId === authUser._id ? "chat-end" : "chat-start"}`}
             ref={messageEndRef}
           >
-            <div className=" chat-image avatar">
+            <div className={message.senderId === authUser._id
+              ? " chat-image avatar flex flex-col items-end "
+              : " chat-image avatar flex flex-col items-start"}>
               <div className="size-10 rounded-full border">
                 <img
                   src={
@@ -66,6 +68,9 @@ const ChatContainer = () => {
                   alt="profile pic"
                 />
               </div>
+              <p className="text-sm opacity-50">{message.senderId === authUser._id
+                ? authUser.fullName
+                : selectedUser.fullName}</p>
             </div>
             <div className="chat-header mb-1">
               <time className="text-xs opacity-50 ml-1">

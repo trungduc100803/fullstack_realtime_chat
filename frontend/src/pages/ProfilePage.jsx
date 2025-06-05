@@ -2,9 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import { useAuthStore } from "../store/useAuthStore";
 import { Camera, Mail, User, ThumbsUp, MessageCircle, Trash2, SendHorizonal } from "lucide-react";
 import Carousel from 'better-react-carousel'
+import { Image } from 'antd'
 import HeartPng from '../constants/tym.png'
 import LikePng from '../constants/like.png'
-import { Image } from 'antd'
 import PostForm from "../components/PostForm";
 import { axiosInstance } from "../lib/axios";
 import DefaultUser from '../constants/default_user.jpg'

@@ -18,6 +18,7 @@ import ProfileFriend from "./pages/ProfileFriend";
 import NotifycationPage from "./pages/NotifycationPage";
 import RequestFriendPage from "./pages/RequestFriendPage";
 import PostDetailPage from "./pages/PostDetailPage";
+import ImageDetailPage from "./pages/ImageDetailPage";
 
 const App = () => {
   const { authUser, checkAuth, isCheckingAuth, onlineUsers } = useAuthStore();
@@ -56,6 +57,7 @@ const App = () => {
         <Route path="/request-friend" element={<RequestFriendPage />} />
         <Route path="/profile" element={authUser ? <ProfilePage /> : <Navigate to="/login" />} />
         <Route path="/profile/:email/:id" element={authUser ? <ProfileFriend /> : <Navigate to="/login" />} />
+        <Route path="/image/:id" element={<ImageDetailPage />} />
         <Route path="/post/:email/:id/:post/:comment" element={<PostDetailPage />} />
       </Routes>
 

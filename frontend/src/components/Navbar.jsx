@@ -106,7 +106,6 @@ const Navbar = () => {
     if (debouncedValue) {
       setLoading(true)
       getMembers()
-      console.log(debouncedValue)
     }
   }, [debouncedValue]);
 

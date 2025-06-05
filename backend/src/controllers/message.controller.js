@@ -22,8 +22,10 @@ export const getUsersForSidebar = async (req, res) => {
     );
     const arrGroup = await Promise.all(
       filteredGroups.map(async u => {
-        const res = await Group.findById(u);
-        return res;
+        const res = await Group.findById(u)
+          .populate("admin", "fullName profilePic email")
+
+        if (res !== null) return res;
       })
     );
     res.status(200).json({

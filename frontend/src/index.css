@@ -1,3 +1,9 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer utilities {
+    .ant-image-preview-root {
+        z-index: 99999 !important;
+    }
+}

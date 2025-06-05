@@ -13,7 +13,8 @@ const Sidebar = () => {
 
   useEffect(() => {
     getUsers();
-  }, [getUsers]);
+  }, [getUsers, tab]);
+
 
   const selectedUserChat = user => {
     setSelectedUser(user)
@@ -30,6 +31,7 @@ const Sidebar = () => {
 
 
   if (isUsersLoading) return <SidebarSkeleton />;
+
 
   return (
     <aside className="h-full w-20 lg:w-72 border-r border-base-300 flex flex-col transition-all duration-200">
@@ -107,7 +109,7 @@ const Sidebar = () => {
           <div className="overflow-y-auto w-full py-3">
             {groups.map((group) => (
               <button
-                key={group._id}
+                key={group?._id}
                 onClick={() => selectedGroupChat(group)}
                 className={`
               w-full p-3 flex items-center gap-3

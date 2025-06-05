@@ -12,7 +12,7 @@ const ChatHeader = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           {/* Avatar */}
-          <Link to={`/profile/${selectedUser._id}`}>
+          <Link to={`/profile/${selectedUser.email}/${selectedUser._id}`}>
             <div className="avatar cursor-pointer">
               <div className="size-10 rounded-full relative">
                 <img src={selectedUser.profilePic || "/avatar.png"} alt={selectedUser.fullName} />
@@ -33,14 +33,14 @@ const ChatHeader = () => {
 
         {/* Close button */}
         <div>
-        <Link className="mr-3" to={`/profile/${selectedUser.email}/${selectedUser._id}`}>
-        <button onClick={() => setSelectedUser(null)}>
-          <SquareUser/>
-        </button>
-        </Link>
-        <button onClick={() => setSelectedUser(null)}>
-          <X />
-        </button>
+          <Link className="mr-3" to={`/profile/${selectedUser.email}/${selectedUser._id}`}>
+            <button onClick={() => setSelectedUser(null)}>
+              <SquareUser />
+            </button>
+          </Link>
+          <button onClick={() => setSelectedUser(null)}>
+            <X />
+          </button>
         </div>
       </div>
     </div>
