@@ -2,6 +2,7 @@ import { create } from "zustand";
 import toast from "react-hot-toast";
 import { axiosInstance } from "../lib/axios";
 import { useAuthStore } from "./useAuthStore";
+import {decryptText} from '../lib/crypto'
 
 
 export const useChatStore = create((set, get) => ({
@@ -33,7 +34,12 @@ export const useChatStore = create((set, get) => ({
     set({ isMessagesLoading: true });
     try {
       const res = await axiosInstance.get(`/messages/${userId}`);
-      set({ messages: res.data });
+      const messages = res.data.map(m => {
+        const text = decryptText(m.text, m.iv);
+        m.text = text
+        return m
+      })
+      set({ messages: messages });
     } catch (error) {
       toast.error(error.response.data.message);
     } finally {
@@ -55,6 +61,8 @@ export const useChatStore = create((set, get) => ({
     const { selectedUser, messages } = get();
     try {
       const res = await axiosInstance.post(`/messages/send/${selectedUser._id}`, messageData);
+      const text = decryptText(res.data.text, res.data.iv);
+      res.data.text = text
       set({ messages: [...messages, res.data] });
     } catch (error) {
       toast.error(error.response.data.message);
@@ -85,11 +93,14 @@ export const useChatStore = create((set, get) => ({
     const socket = useAuthStore.getState().socket;
 
     socket.on("newMessage", (newMessage) => {
-      const isMessageSentFromSelectedUser = newMessage.senderId === selectedUser._id;
+      const text = decryptText(newMessage.newMessage.text, newMessage.iv);
+      newMessage.newMessage.text = text
+      const isMessageSentFromSelectedUser = newMessage.newMessage.senderId === selectedUser._id;
       if (!isMessageSentFromSelectedUser) return;
-
+      
+      console.log(newMessage.newMessage);
       set({
-        messages: [...get().messages, newMessage],
+        messages: [...get().messages, newMessage.newMessage],
       });
     });
 

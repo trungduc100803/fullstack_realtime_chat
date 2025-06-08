@@ -4,6 +4,7 @@ import Message from "../models/message.model.js";
 
 import cloudinary from "../lib/cloudinary.js";
 import { getReceiverSocketId, io } from "../lib/socket.js";
+import {decryptText} from '../lib/crypto.js'
 
 export const getUsersForSidebar = async (req, res) => {
   try {
@@ -262,9 +263,44 @@ export const getMessages = async (req, res) => {
   }
 };
 
+// export const sendMessage = async (req, res) => {
+//   try {
+//     const { encryptedData, iv, image } = req.body;
+//     const { id: receiverId } = req.params;
+//     const senderId = req.user._id;
+
+//     let imageUrl;
+//     if (image) {
+//       const uploadResponse = await cloudinary.uploader.upload(image);
+//       imageUrl = uploadResponse.secure_url;
+//     }
+
+//     const text = decryptText(encryptedData, iv);
+
+//     const newMessage = new Message({
+//       senderId,
+//       receiverId,
+//       text,
+//       image: imageUrl,
+//     });
+//     await newMessage.save();
+
+//     const receiverSocketId = getReceiverSocketId(receiverId);
+//     if (receiverSocketId) {
+//       io.to(receiverSocketId).emit("newMessage", newMessage);
+//     }
+
+//     res.status(201).json(newMessage);
+//   } catch (error) {
+//     console.log("Error in sendMessage controller:", error.message);
+//     res.status(500).json({ error: "Internal server error" });
+//   }
+// };
+
+
 export const sendMessage = async (req, res) => {
   try {
-    const { text, image } = req.body;
+    const { text, image, iv } = req.body;
     const { id: receiverId } = req.params;
     const senderId = req.user._id;
 
@@ -275,18 +311,23 @@ export const sendMessage = async (req, res) => {
       imageUrl = uploadResponse.secure_url;
     }
 
+
     const newMessage = new Message({
       senderId,
       receiverId,
       text,
       image: imageUrl,
+      iv
     });
 
     await newMessage.save();
 
     const receiverSocketId = getReceiverSocketId(receiverId);
+    const data = {
+      newMessage, iv
+    }
     if (receiverSocketId) {
-      io.to(receiverSocketId).emit("newMessage", newMessage);
+      io.to(receiverSocketId).emit("newMessage", (data));
     }
 
     res.status(201).json(newMessage);
