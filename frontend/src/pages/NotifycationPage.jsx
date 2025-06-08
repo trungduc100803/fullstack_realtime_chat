@@ -56,7 +56,7 @@ export default function NotifycationPage() {
                                 <div className={`p-2 flex flex-1   cursor-pointer `}>
 
                                     <Link
-                                        to={`/post/${n.sender.email}/${n.sender._id}/${n.post._id}/${n.comment._id}`}
+                                        // to={`/post/${n.sender.email}/${n.sender._id}/${n.post._id}/${n.comment._id}`}
                                         state={{ background: location }}
                                         onClick={() => markNotificationAsRead(n._id)}
                                     >
@@ -80,7 +80,7 @@ export default function NotifycationPage() {
                                 <div className={`p-2 flex flex-1   cursor-pointer `}>
 
                                     <Link
-                                        to={`/post/${n.sender.email}/${n.sender._id}/${n.post._id}`}
+                                        // to={`/post/${n.sender.email}/${n.sender._id}/${n.post._id}`}
                                         state={{ background: location }}
                                         onClick={() => markNotificationAsRead(n._id)}
                                     >
