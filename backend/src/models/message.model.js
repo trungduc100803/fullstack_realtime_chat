@@ -26,6 +26,8 @@ const messageSchema = new mongoose.Schema(
       ref: "Group",
       default: null,
     },
+    file: { type: String },         // ✅ Thêm link file
+    fileType: { type: String },     // ✅ Thêm MIME type
   },
   { timestamps: true }
 );

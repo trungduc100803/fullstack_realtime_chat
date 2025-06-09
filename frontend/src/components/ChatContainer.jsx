@@ -86,6 +86,18 @@ const ChatContainer = () => {
                   className="sm:max-w-[200px] rounded-md mb-2"
                 />
               )}
+              {message.file ? (
+              <a
+                href={message.file}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-500 underline"
+              >
+                📎 {message.fileType.split("/")[1].toUpperCase()} File
+              </a>
+            ) : (
+              <p>{message.text}</p>
+            )}
               {message.text && <p>{message.text}</p>}
             </div>
           </div>

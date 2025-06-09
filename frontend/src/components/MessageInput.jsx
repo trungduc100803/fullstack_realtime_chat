@@ -11,6 +11,11 @@ const MessageInput = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const fileInputRef = useRef(null);
   const { sendMessage } = useChatStore();
+  const [fileData, setFileData] = useState(null);
+const [fileName, setFileName] = useState("");
+const [fileMimeType, setFileMimeType] = useState("");
+const fileRef = useRef(null);
+
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -31,27 +36,73 @@ const MessageInput = () => {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  // const handleSendMessage = async (e) => {
+  //   e.preventDefault();
+  //   if (!text.trim() && !imagePreview) return;
+
+  //   try {
+  //     const encrypted = encryptText(text.trim());
+  //     await sendMessage({
+  //       text: encrypted.data,
+  //       // encryptedData: encrypted.data,
+  //       iv: encrypted.iv,
+  //       // tag: encrypted.tag,
+  //       image: imagePreview,
+  //     });
+
+  //     setText("");
+  //     setImagePreview(null);
+  //     if (fileInputRef.current) fileInputRef.current.value = "";
+  //   } catch (error) {
+  //     console.error("Failed to send message:", error);
+  //   }
+  // };
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+  
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setFileData(reader.result); // base64 string
+      setFileName(file.name);
+      setFileMimeType(file.type);
+    };
+    reader.readAsDataURL(file);
+  };
+  
+
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!text.trim() && !imagePreview) return;
-
+    if (!text.trim() && !imagePreview && !fileData) return;
+  
     try {
       const encrypted = encryptText(text.trim());
+      console.log(encrypted.data);
+      console.log(encrypted.iv);
+      console.log(imagePreview);
+      console.log(fileData);
+      console.log(fileMimeType);
       await sendMessage({
         text: encrypted.data,
-        // encryptedData: encrypted.data,
         iv: encrypted.iv,
-        // tag: encrypted.tag,
         image: imagePreview,
+        file: fileData,
+        fileType: fileMimeType
       });
-
+  
       setText("");
       setImagePreview(null);
+      setFileData(null);
+      setFileName("");
+      setFileMimeType("");
       if (fileInputRef.current) fileInputRef.current.value = "";
+      if (fileRef.current) fileRef.current.value = "";
     } catch (error) {
       console.error("Failed to send message:", error);
     }
   };
+  
 
   return (
     <div className="p-4 w-full">
@@ -90,6 +141,22 @@ const MessageInput = () => {
             ref={fileInputRef}
             onChange={handleImageChange}
           />
+          {fileName && (
+            <div className="mb-2 text-sm text-zinc-300 flex items-center gap-2">
+              📎 {fileName}
+              <button
+                onClick={() => {
+                  setFileData(null);
+                  setFileName("");
+                  setFileMimeType("");
+                  if (fileRef.current) fileRef.current.value = "";
+                }}
+                className="text-red-500"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          )}
 
           <button
             type="button"
@@ -98,11 +165,29 @@ const MessageInput = () => {
           >
             <Image size={20} />
           </button>
+
+          <input
+            type="file"
+            accept=".pdf,.doc,.docx,.ppt,.pptx,.zip"
+            className="hidden"
+            ref={fileRef}
+            onChange={handleFileUpload}
+          />
+
+          <button
+            type="button"
+            className="hidden sm:flex btn btn-circle text-zinc-400"
+            onClick={() => fileRef.current?.click()}
+            title="Gửi file"
+          >
+            📎
+          </button>
+
         </div>
         <button
           type="submit"
           className="btn btn-sm btn-circle"
-          disabled={!text.trim() && !imagePreview}
+          disabled={!text.trim() && !imagePreview && !fileData}
         >
           <Send size={22} />
         </button>
