@@ -50,7 +50,9 @@ const ChatContainer = () => {
       <ChatHeader />
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((message) => (
+        {messages.map((message) => {
+
+          return (
           <div
             key={message._id}
             className={`chat ${message.senderId === authUser._id ? "chat-end" : "chat-start"}`}
@@ -93,15 +95,18 @@ const ChatContainer = () => {
                 rel="noopener noreferrer"
                 className="text-blue-500 underline"
               >
-                📎 {message.fileType.split("/")[1].toUpperCase()} File
+                📎 {message.fileName} File
               </a>
             ) : (
-              <p>{message.text}</p>
+             <></>
             )}
               {message.text && <p>{message.text}</p>}
             </div>
           </div>
-        ))}
+        )
+        }
+          
+        )}
       </div>
 
       <MessageInput />

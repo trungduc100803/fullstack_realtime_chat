@@ -265,7 +265,7 @@ export const getMessages = async (req, res) => {
 
 export const sendMessage = async (req, res) => {
   try {
-    const { text, image, file, fileType, iv } = req.body;
+    const { text, image, file, fileType, iv, fileName } = req.body;
     const { id: receiverId } = req.params;
     const senderId = req.user._id;
 
@@ -283,7 +283,6 @@ export const sendMessage = async (req, res) => {
       fileUrl = uploadResponse.secure_url;
     }
 
-    console.log(fileUrl);
 
     const newMessage = new Message({
       senderId,
@@ -292,7 +291,8 @@ export const sendMessage = async (req, res) => {
       iv,
       image: imageUrl,
       file: fileUrl,
-      fileType
+      fileType,
+      fileName
     });
 
     await newMessage.save();
@@ -366,7 +366,7 @@ export const getMessagesGroups = async (req, res) => {
 
 export const sendMessageGroup = async (req, res) => {
   try {
-    const { text, image } = req.body;
+        const { text, image, file, fileType, iv, fileName } = req.body;
     const { id: groupReceiverId } = req.params;
     const senderId = req.user._id;
 
@@ -384,12 +384,33 @@ export const sendMessageGroup = async (req, res) => {
     }
 
     // Tạo 1 message duy nhất với groupId
+    // const newMessage = new Message({
+    //   senderId,
+    //   groupId: groupReceiverId,
+    //   text,
+    //   image: imageUrl,
+    // });
+    // await newMessage.save();
+    let fileUrl;
+    if (file && fileType) {
+      const uploadResponse = await cloudinary.uploader.upload(file, {
+        resource_type: "raw", // Cho phép zip/pdf/ppt...
+      });
+      fileUrl = uploadResponse.secure_url;
+    }
+
+
     const newMessage = new Message({
       senderId,
       groupId: groupReceiverId,
       text,
+      iv,
       image: imageUrl,
+      file: fileUrl,
+      fileType,
+      fileName
     });
+
     await newMessage.save();
     // 
     const populatedMessage = await Message.findById(newMessage._id)

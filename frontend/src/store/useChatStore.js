@@ -50,7 +50,12 @@ export const useChatStore = create((set, get) => ({
     set({ isMessagesGroupLoading: true });
     try {
       const res = await axiosInstance.get(`/messages/group/${userId}`);
-      set({ messagesGroup: res.data });
+      const messages = res.data.map(m => {
+        const text = decryptText(m.text, m.iv);
+        m.text = text
+        return m
+      })
+      set({ messagesGroup: messages });
     } catch (error) {
       toast.error(error.response.data.message);
     } finally {
@@ -72,6 +77,8 @@ export const useChatStore = create((set, get) => ({
     const { selectedGroup, messagesGroup } = get();
     try {
       const res = await axiosInstance.post(`/messages/send/group/${selectedGroup._id}`, messageData);
+      const text = decryptText(res.data.text, res.data.iv);
+      res.data.text = text
       set({ messagesGroup: [...messagesGroup, res.data] });
     } catch (error) {
       toast.error(error.response.data.message);
@@ -98,7 +105,6 @@ export const useChatStore = create((set, get) => ({
       const isMessageSentFromSelectedUser = newMessage.newMessage.senderId === selectedUser._id;
       if (!isMessageSentFromSelectedUser) return;
       
-      console.log(newMessage.newMessage);
       set({
         messages: [...get().messages, newMessage.newMessage],
       });
@@ -113,9 +119,11 @@ export const useChatStore = create((set, get) => ({
     if (!selectedGroup) return;
 
     socket.on("newMessageGroup", (newMessage) => {
+      const text = decryptText(newMessage.newMessage.text, newMessage.iv);
+      newMessage.newMessage.text = text
       if (newMessage.groupId !== selectedGroup._id) return;
       set({
-        messagesGroup: [...get().messagesGroup, newMessage],
+        messagesGroup: [...get().messagesGroup, newMessage.newMessage],
       });
     });
   },

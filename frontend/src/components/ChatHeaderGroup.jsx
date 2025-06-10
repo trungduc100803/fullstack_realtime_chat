@@ -226,7 +226,6 @@ const ChatHeaderGroup = () => {
     setImageGroup(group.image)
   }
 
-  console.log(group)
 
   return (
     <div className="p-2.5 border-b border-base-300">
