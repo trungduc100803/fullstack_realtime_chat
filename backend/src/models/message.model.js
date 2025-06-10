@@ -29,6 +29,7 @@ const messageSchema = new mongoose.Schema(
     file: { type: String },         // ✅ Thêm link file
     fileType: { type: String },     // ✅ Thêm MIME type
     fileName: { type: String },     // ✅ Thêm MIME type
+    fileSize: { type: Number },     // ✅ Thêm MIME type
   },
   { timestamps: true }
 );

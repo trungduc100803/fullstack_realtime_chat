@@ -276,11 +276,14 @@ export const sendMessage = async (req, res) => {
     }
 
     let fileUrl;
+    let fileSize
+
     if (file && fileType) {
       const uploadResponse = await cloudinary.uploader.upload(file, {
         resource_type: "raw", // Cho phép zip/pdf/ppt...
       });
       fileUrl = uploadResponse.secure_url;
+      fileSize = uploadResponse.bytes;
     }
 
 
@@ -292,7 +295,8 @@ export const sendMessage = async (req, res) => {
       image: imageUrl,
       file: fileUrl,
       fileType,
-      fileName
+      fileName,
+      fileSize
     });
 
     await newMessage.save();
@@ -392,11 +396,14 @@ export const sendMessageGroup = async (req, res) => {
     // });
     // await newMessage.save();
     let fileUrl;
+    let fileSize
+
     if (file && fileType) {
       const uploadResponse = await cloudinary.uploader.upload(file, {
         resource_type: "raw", // Cho phép zip/pdf/ppt...
       });
       fileUrl = uploadResponse.secure_url;
+      fileSize = uploadResponse.bytes;
     }
 
 
@@ -408,7 +415,8 @@ export const sendMessageGroup = async (req, res) => {
       image: imageUrl,
       file: fileUrl,
       fileType,
-      fileName
+      fileName,
+      fileSize
     });
 
     await newMessage.save();
