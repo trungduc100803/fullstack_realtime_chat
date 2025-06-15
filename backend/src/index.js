@@ -26,10 +26,17 @@ app.use(express.urlencoded({ limit: '50mb' }));
 app.use("/uploads", express.static("uploads")); // phục vụ ảnh tĩnh
 
 app.use(
+  // cors({
+  //   origin: "http://localhost:5173",
+  //   credentials: true,
+  // })
   cors({
-    origin: "http://localhost:5173",
+    origin: [
+      "http://localhost:5173",
+      "http://192.168.1.10:5173" // 👈 thêm IP của máy bạn
+    ],
     credentials: true,
-  })
+  })  
 );
 
 app.use("/api/auth", authRoutes);
@@ -58,7 +65,13 @@ if (process.env.NODE_ENV === "production") {
   });
 }
 
-server.listen(PORT, () => {
-  console.log("server is running on PORT:" + PORT);
+// server.listen(PORT, () => {
+//   console.log("server is running on PORT:" + PORT);
+//   connectDB();
+// });
+
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`🟢 Server running on http://192.168.1.10:${PORT}`);
   connectDB();
 });
+// 0.0.0.0 giúp server chấp nhận kết nối từ các máy khác trong mạng LAN.

@@ -47,7 +47,7 @@ export const createPost = async (req, res) => {
 // Lấy tất cả bài viết (có thể thêm phân trang sau)
 export const getPostsByUser = async (req, res) => {
     const { userId } = req.params; // hoặc req.query.userId nếu bạn dùng query string
-
+    console.log(userId);
     try {
         const posts = await Post.find({ userPost: userId })
             .populate("userPost", "fullName profilePic")
