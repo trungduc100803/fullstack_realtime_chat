@@ -1,6 +1,6 @@
 import express from "express";
 import { protectRoute } from "../middleware/auth.middleware.js";
-import { acceptAddFriend, addFriend, cancelAddFriend, checkFriend, deleteFriend, getMessages, getMessagesGroups, getNotifyAddFriend, getUserById, getUserForName, getUsersForSidebar, searchUser, sendMessage, sendMessageGroup } from "../controllers/message.controller.js";
+import { acceptAddFriend, addFriend, cancelAddFriend, checkFriend, deleteFriend, getMessages, getMessagesGroups, getNotifyAddFriend, getUserById, getUserForName, getUsersForSidebar, searchUser, sendMessage, sendMessageGroup, searchMessage } from "../controllers/message.controller.js";
 
 const router = express.Router();
 
@@ -19,5 +19,6 @@ router.post("/delete-friend", protectRoute, deleteFriend);
 
 router.get("/group/:id", protectRoute, getMessagesGroups);
 router.post("/send/group/:id", protectRoute, sendMessageGroup);
+router.get("/search-message/:keyword", protectRoute, searchMessage);
 
 export default router;

@@ -17,9 +17,11 @@ const ChatContainer = () => {
     selectedUser,
     subscribeToMessages,
     unsubscribeFromMessages,
+    highlightedMessageId, setHighlightedMessageId
   } = useChatStore();
   const { authUser } = useAuthStore();
   const messageEndRef = useRef(null);
+  const messageRefs = useRef({});
 
   useEffect(() => {
     getMessages(selectedUser._id);
@@ -30,7 +32,21 @@ const ChatContainer = () => {
   }, [selectedUser._id, getMessages, subscribeToMessages, unsubscribeFromMessages]);
 
   useEffect(() => {
-    if (messageEndRef.current && messages) {
+    if (highlightedMessageId && messageRefs.current[highlightedMessageId]) {
+      messageRefs.current[highlightedMessageId].scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+  
+      setTimeout(() => {
+        setHighlightedMessageId(null); // xoá highlight sau 2s
+      }, 2000);
+    }
+  }, [messages, highlightedMessageId]);
+  
+  
+  useEffect(() => {
+    if (messageEndRef.current && messages.length > 0) {
       messageEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
@@ -51,35 +67,40 @@ const ChatContainer = () => {
       <ChatHeader />
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((message) => {
-          return (
+      {messages.map((message) => {
+        const isMine = message.senderId === authUser._id;
+        const isHighlighted = highlightedMessageId === message._id;
+
+        return (
           <div
             key={message._id}
-            className={`chat ${message.senderId === authUser._id ? "chat-end" : "chat-start"}`}
-            ref={messageEndRef}
+            ref={(el) => (messageRefs.current[message._id] = el)}
+            className={`chat ${isMine ? "chat-end" : "chat-start"} ${
+              isHighlighted ? "ring-2 ring-indigo-400 rounded-lg p-1" : ""
+            }`}
           >
-            <div className={message.senderId === authUser._id
-              ? " chat-image avatar flex flex-col items-end "
-              : " chat-image avatar flex flex-col items-start"}>
+            <div className={`chat-image avatar flex flex-col items-${isMine ? "end" : "start"}`}>
               <div className="size-10 rounded-full border">
                 <img
                   src={
-                    message.senderId === authUser._id
+                    isMine
                       ? authUser.profilePic || "/avatar.png"
                       : selectedUser.profilePic || "/avatar.png"
                   }
                   alt="profile pic"
                 />
               </div>
-              <p className="text-sm opacity-50">{message.senderId === authUser._id
-                ? authUser.fullName
-                : selectedUser.fullName}</p>
+              <p className="text-sm opacity-50">
+                {isMine ? authUser.fullName : selectedUser.fullName}
+              </p>
             </div>
+
             <div className="chat-header mb-1">
               <time className="text-xs opacity-50 ml-1">
-                {formatMessageTime(message.createdAt)}
+                {new Date(message.createdAt).toLocaleString()}
               </time>
             </div>
+
             <div className="chat-bubble flex flex-col">
               {message.image && (
                 <Image
@@ -89,31 +110,19 @@ const ChatContainer = () => {
                 />
               )}
               {message.file ? (
-              // <a
-              //   href={message.file}
-              //   target="_blank"
-              //   rel="noopener noreferrer"
-              //   className="text-blue-500 underline"
-              // >
-              //   📎 {message.fileName} File
-              // </a>
-              <FileAttachment
-                name={message.fileName}
-                size={message.fileSize}
-                url={message.file}
-              />
-            ) : (
-             <></>
-            )}
+                <FileAttachment
+                  name={message.fileName}
+                  size={message.fileSize}
+                  url={message.file}
+                />
+              ) : null}
               {message.text && <p>{message.text}</p>}
             </div>
           </div>
-        )
-        }
-          
-        )}
+        );
+      })}
+      <div ref={messageEndRef} />
       </div>
-
       <MessageInput />
     </div>
   );

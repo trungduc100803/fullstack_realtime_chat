@@ -16,6 +16,8 @@ export const useChatStore = create((set, get) => ({
   isMessagesLoading: false,
   isMessagesGroupLoading: false,
   userSearch: {},
+  highlightedMessageId: null,
+  setHighlightedMessageId: (id) => set({ highlightedMessageId: id }),
 
   getUsers: async () => {
     set({ isUsersLoading: true });

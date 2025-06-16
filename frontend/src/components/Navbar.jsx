@@ -6,11 +6,13 @@ import { useChatStore } from "../store/useChatStore";
 import toast from "react-hot-toast";
 import { axiosInstance } from "../lib/axios";
 import DefaultUser from '../constants/default_user.jpg'
+import {decryptText} from '../lib/crypto'
 
 
 
 
 const Navbar = () => {
+  const [searchMessages, setSearchMessages] = useState([]);
   const [searchValue, setSearchValue] = useState('')
   const [debouncedValue, setDebouncedValue] = useState('');
   const [members, setMembers] = useState([]);
@@ -19,7 +21,7 @@ const Navbar = () => {
   const [searchMemberValue, setSearchMemberValue] = useState('')
   const [groupValue, setGroupValue] = useState('')
   const { logout, authUser } = useAuthStore();
-  const { userSearch, searchUser } = useChatStore();
+  const { userSearch, searchUser, users, setSelectedUser, setHighlightedMessageId  } = useChatStore();
   const fileInputRef = useRef(null);
   const [base64, setBase64] = useState('');
   const [checkedItems, setCheckedItems] = useState({});
@@ -160,10 +162,33 @@ const Navbar = () => {
       toast.error('Bạn chưa nhập thông tin')
       return
     }
-    await searchUser({ userEmailSearch: searchValue })
-    if (userSearch.userSearch.email === searchValue) {
-      document.getElementById('search_member').showModal()
-      setSearchValue('')
+
+    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(searchValue);
+
+    if (isEmail) {
+      // Tìm người dùng theo email
+      try {
+        await searchUser({ userEmailSearch: searchValue });
+        if (userSearch.userSearch.email === searchValue) {
+          document.getElementById('search_member').showModal();
+          setSearchValue('');
+        }
+      } catch (error) {
+        // toast.error('Không tìm thấy người dùng');
+        console.log('object');
+      }
+    } else {
+      // Tìm tin nhắn
+      try {
+        const res = await axiosInstance.get(`/messages/search-message/${searchValue}`);
+        // Hiển thị kết quả tại đây (tạo modal riêng nếu cần)
+        setSearchMessages(res.data.messages);
+        document.getElementById('search_message_modal').showModal();
+        console.log('Kết quả tìm tin nhắn: ', res.data.messages);
+        toast.success(`Tìm thấy ${res.data.messages.length} tin nhắn`);
+      } catch (error) {
+        toast.error('Không tìm thấy tin nhắn');
+      }
     }
   }
 
@@ -181,6 +206,18 @@ const Navbar = () => {
     setDebouncedValue('')
   }
 
+  const handleJumpToMessage = async (msg) => {
+    const otherUserId = msg.senderId === authUser._id ? msg.receiverId : msg.senderId;
+    const user = users.find(u => u._id === otherUserId);
+  
+    if (user) {
+      setSelectedUser(user);
+      setHighlightedMessageId(msg._id);  // 👈 set ID để focus vào trong ChatContainer
+      document.getElementById('search_message_modal').close();
+    } else {
+      toast.error("Không tìm thấy người dùng trong danh sách");
+    }
+  };
 
   return (
     <header
@@ -188,6 +225,54 @@ const Navbar = () => {
     backdrop-blur-lg bg-base-100/80"
     >
       <div className="container mx-auto px-4 h-16">
+        {/* modal search message */}
+        <dialog id="search_message_modal" className="modal">
+          <div className="modal-box">
+            <form method="dialog">
+              <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+              <h3 className="font-bold text-lg">Kết quả tin nhắn</h3>
+              <div className="mt-4 space-y-3 max-h-96 overflow-y-auto">
+                {searchMessages.length > 0 ? (
+                  searchMessages.map((msg, idx) => {
+                    const sender =
+                      msg.senderId === authUser._id
+                        ? authUser
+                        : users.find((u) => u._id === msg.senderId);
+
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => handleJumpToMessage(msg)}
+                        className="block w-full text-left p-3  rounded hover:bg-base-200"
+                      >
+                        <div className="flex items-center gap-3 mb-1">
+                          <div className="w-8 h-8 rounded-full overflow-hidden">
+                            <img
+                              src={sender?.profilePic || "/avatar.png"}
+                              alt="avatar"
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <div className="text-sm font-medium text-zinc-100">
+                            {sender?.fullName || "Người gửi"}
+                          </div>
+                        </div>
+                        <p className="text-xs text-zinc-500 mb-1">
+                          Gửi lúc: {new Date(msg.createdAt).toLocaleString()}
+                        </p>
+                        <p className="text-sm text-zinc-300 truncate">{decryptText(msg.text, msg.iv)}</p>
+                      </button>
+                    );
+                  })
+                ) : (
+                  <p className="text-sm text-zinc-500">Không có tin nhắn phù hợp</p>
+                )}
+              </div>
+            </form>
+          </div>
+        </dialog>
+
+        {/*  */}
         <div className="flex items-center justify-between h-full">
           <div className="flex items-center gap-8">
             <Link to="/" className="flex items-center gap-2.5 hover:opacity-80 transition-all">

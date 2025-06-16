@@ -312,7 +312,37 @@ export const sendMessage = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+export const searchMessage = async (req, res) => {
+  try {
+    const { keyword } = req.params;
+    const myId = req.user._id;
 
+    // Lấy tất cả message có bạn là sender hoặc receiver
+    const allMessages = await Message.find({
+      $or: [
+        { senderId: myId },
+        { receiverId: myId },
+      ]
+    });
+
+    // Giải mã và lọc theo từ khóa
+    const keywordLower = keyword.toLowerCase();
+    const messages = allMessages.filter(msg => {
+      try {
+        const decryptedText = decryptText(msg.text, msg.iv);
+        return decryptedText.toLowerCase().includes(keywordLower);
+      } catch (err) {
+        return false;
+      }
+    });
+
+
+    res.status(200).json({ messages });
+  } catch (error) {
+    console.error("Error in searchMessage:", error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
 
 
 // export const sendMessage = async (req, res) => {
