@@ -312,22 +312,62 @@ export const sendMessage = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+// export const searchMessage = async (req, res) => {
+//   try {
+//     const { keyword } = req.params;
+//     const myId = req.user._id;
+
+//     // Lấy tất cả message có bạn là sender hoặc receiver
+//     const allMessages = await Message.find({
+//       $or: [
+//         { senderId: myId },
+//         { receiverId: myId },
+//       ]
+//     });
+
+//     // Giải mã và lọc theo từ khóa
+//     const keywordLower = keyword.toLowerCase();
+//     const messages = allMessages.filter(msg => {
+//       try {
+//         const decryptedText = decryptText(msg.text, msg.iv);
+//         return decryptedText.toLowerCase().includes(keywordLower);
+//       } catch (err) {
+//         return false;
+//       }
+//     });
+
+
+//     res.status(200).json({ messages });
+//   } catch (error) {
+//     console.error("Error in searchMessage:", error.message);
+//     res.status(500).json({ error: "Internal server error" });
+//   }
+// };
+
 export const searchMessage = async (req, res) => {
   try {
     const { keyword } = req.params;
     const myId = req.user._id;
 
-    // Lấy tất cả message có bạn là sender hoặc receiver
+    // 1. Lấy danh sách bạn bè
+    const user = await User.findById(myId);
+    if (!user || !user.friends || user.friends.length === 0) {
+      return res.status(200).json({ messages: [] });
+    }
+
+    const friendIds = user.friends;
+
+    // 2. Tìm tin nhắn giữa bạn và bạn bè
     const allMessages = await Message.find({
       $or: [
-        { senderId: myId },
-        { receiverId: myId },
-      ]
+        { senderId: myId, receiverId: { $in: friendIds } },
+        { receiverId: myId, senderId: { $in: friendIds } },
+      ],
     });
 
-    // Giải mã và lọc theo từ khóa
+    // 3. Giải mã và lọc theo keyword
     const keywordLower = keyword.toLowerCase();
-    const messages = allMessages.filter(msg => {
+    const matchedMessages = allMessages.filter((msg) => {
       try {
         const decryptedText = decryptText(msg.text, msg.iv);
         return decryptedText.toLowerCase().includes(keywordLower);
@@ -336,8 +376,7 @@ export const searchMessage = async (req, res) => {
       }
     });
 
-
-    res.status(200).json({ messages });
+    res.status(200).json({ messages: matchedMessages });
   } catch (error) {
     console.error("Error in searchMessage:", error.message);
     res.status(500).json({ error: "Internal server error" });
@@ -345,44 +384,38 @@ export const searchMessage = async (req, res) => {
 };
 
 
-// export const sendMessage = async (req, res) => {
-//   try {
-//     const { text, image, iv } = req.body;
-//     const { id: receiverId } = req.params;
-//     const senderId = req.user._id;
+export const searchGroupMessages = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { keyword } = req.params;
 
-//     let imageUrl;
-//     if (image) {
-//       // Upload base64 image to cloudinary
-//       const uploadResponse = await cloudinary.uploader.upload(image);
-//       imageUrl = uploadResponse.secure_url;
-//     }
+    const user = await User.findById(userId);
+    if (!user || !user.groups || user.groups.length === 0) {
+      return res.status(200).json({ messages: [] });
+    }
 
+    const allGroupMessages = await Message.find({
+      groupId: { $in: user.groups },
+    }).populate("senderId", "fullName profilePic");
 
-//     const newMessage = new Message({
-//       senderId,
-//       receiverId,
-//       text,
-//       image: imageUrl,
-//       iv
-//     });
+    const keywordLower = keyword.toLowerCase();
 
-//     await newMessage.save();
+    const matchedMessages = allGroupMessages.filter(msg => {
+      try {
+        const decrypted = decryptText(msg.text, msg.iv);
+        return decrypted.toLowerCase().includes(keywordLower);
+      } catch {
+        return false;
+      }
+    });
 
-//     const receiverSocketId = getReceiverSocketId(receiverId);
-//     const data = {
-//       newMessage, iv
-//     }
-//     if (receiverSocketId) {
-//       io.to(receiverSocketId).emit("newMessage", (data));
-//     }
+    res.status(200).json({ messages: matchedMessages });
+  } catch (error) {
+    console.error("Error in searchGroupMessages:", error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
 
-//     res.status(201).json(newMessage);
-//   } catch (error) {
-//     console.log("Error in sendMessage controller: ", error.message);
-//     res.status(500).json({ error: "Internal server error" });
-//   }
-// };
 
 export const getMessagesGroups = async (req, res) => {
   try {

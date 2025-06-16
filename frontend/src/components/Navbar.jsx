@@ -21,7 +21,7 @@ const Navbar = () => {
   const [searchMemberValue, setSearchMemberValue] = useState('')
   const [groupValue, setGroupValue] = useState('')
   const { logout, authUser } = useAuthStore();
-  const { userSearch, searchUser, users, setSelectedUser, setHighlightedMessageId  } = useChatStore();
+  const { userSearch, searchUser, users, groups, setSelectedUser, setSelectedGroup, setHighlightedMessageId  } = useChatStore();
   const fileInputRef = useRef(null);
   const [base64, setBase64] = useState('');
   const [checkedItems, setCheckedItems] = useState({});
@@ -157,16 +157,15 @@ const Navbar = () => {
   }
 
   const searchMember = async e => {
-    e.preventDefault()
+    e.preventDefault();
     if (searchValue === '') {
-      toast.error('Bạn chưa nhập thông tin')
-      return
+      toast.error('Bạn chưa nhập thông tin');
+      return;
     }
-
+  
     const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(searchValue);
-
+  
     if (isEmail) {
-      // Tìm người dùng theo email
       try {
         await searchUser({ userEmailSearch: searchValue });
         if (userSearch.userSearch.email === searchValue) {
@@ -174,23 +173,23 @@ const Navbar = () => {
           setSearchValue('');
         }
       } catch (error) {
-        // toast.error('Không tìm thấy người dùng');
-        console.log('object');
+        toast.error("Không tìm thấy người dùng");
       }
     } else {
-      // Tìm tin nhắn
       try {
-        const res = await axiosInstance.get(`/messages/search-message/${searchValue}`);
-        // Hiển thị kết quả tại đây (tạo modal riêng nếu cần)
-        setSearchMessages(res.data.messages);
+        const [res1, res2] = await Promise.all([
+          axiosInstance.get(`/messages/search-message/${searchValue}`),           // tin nhắn cá nhân
+          axiosInstance.get(`/messages/search-group-message/${searchValue}`),    // tin nhắn nhóm
+        ]);
+        const all = [...res1.data.messages, ...res2.data.messages];
+        setSearchMessages(all);
         document.getElementById('search_message_modal').showModal();
-        console.log('Kết quả tìm tin nhắn: ', res.data.messages);
-        toast.success(`Tìm thấy ${res.data.messages.length} tin nhắn`);
       } catch (error) {
-        toast.error('Không tìm thấy tin nhắn');
+        toast.error("Không tìm thấy tin nhắn");
       }
     }
-  }
+  };
+  
 
   const handleDeleteMemberChecked = async id => {
     const updatedList = checkedList.filter(name => name !== id);
@@ -206,16 +205,36 @@ const Navbar = () => {
     setDebouncedValue('')
   }
 
-  const handleJumpToMessage = async (msg) => {
-    const otherUserId = msg.senderId === authUser._id ? msg.receiverId : msg.senderId;
-    const user = users.find(u => u._id === otherUserId);
+  //   const otherUserId = msg.senderId === authUser._id ? msg.receiverId : msg.senderId;
+  //   const user = users.find(u => u._id === otherUserId);
   
-    if (user) {
-      setSelectedUser(user);
-      setHighlightedMessageId(msg._id);  // 👈 set ID để focus vào trong ChatContainer
-      document.getElementById('search_message_modal').close();
+  //   if (user) {
+  //     setSelectedUser(user);
+  //     setHighlightedMessageId(msg._id);  // 👈 set ID để focus vào trong ChatContainer
+  //     document.getElementById('search_message_modal').close();
+  //   } else {
+  //     toast.error("Không tìm thấy người dùng trong danh sách");
+  //   }
+  // };
+
+  const handleJumpToMessage = (msg) => {
+    if (msg.groupId) {
+      const group = groups.find(g => g._id === msg.groupId);
+      if (group) {
+        setSelectedGroup(group);
+        setSelectedUser(null);
+        setHighlightedMessageId(msg._id);
+        document.getElementById('search_message_modal').close();
+      }
     } else {
-      toast.error("Không tìm thấy người dùng trong danh sách");
+      const otherUserId = msg.senderId === authUser._id ? msg.receiverId : msg.senderId;
+      const user = users.find(u => u._id === otherUserId);
+      if (user) {
+        setSelectedUser(user);
+        setSelectedGroup(null);
+        setHighlightedMessageId(msg._id);
+        document.getElementById('search_message_modal').close();
+      }
     }
   };
 
@@ -226,6 +245,7 @@ const Navbar = () => {
     >
       <div className="container mx-auto px-4 h-16">
         {/* modal search message */}
+
         <dialog id="search_message_modal" className="modal">
           <div className="modal-box">
             <form method="dialog">
@@ -234,10 +254,15 @@ const Navbar = () => {
               <div className="mt-4 space-y-3 max-h-96 overflow-y-auto">
                 {searchMessages.length > 0 ? (
                   searchMessages.map((msg, idx) => {
+                    const isFromGroup = !!msg.groupId;
+
                     const sender =
                       msg.senderId === authUser._id
                         ? authUser
                         : users.find((u) => u._id === msg.senderId);
+
+                    const group =
+                      isFromGroup && groups.find((g) => g._id === msg.groupId);
 
                     return (
                       <button
@@ -245,8 +270,25 @@ const Navbar = () => {
                         onClick={() => handleJumpToMessage(msg)}
                         className="block w-full text-left p-3  rounded hover:bg-base-200"
                       >
+                        {/* Group Info nếu là tin nhắn nhóm */}
+                        {isFromGroup && group && (
+                          <div className="flex items-center gap-3 mb-2">
+                            <div className="w-6 h-6 rounded-full overflow-hidden">
+                              <img
+                                src={group.image || "/avatar.png"}
+                                alt="group"
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <div className="text-xs text-zinc-400 font-semibold">
+                              Trong nhóm: {group.name}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Sender info */}
                         <div className="flex items-center gap-3 mb-1">
-                          <div className="w-8 h-8 rounded-full overflow-hidden">
+                          <div className="w-8 h-8 rounded-full overflow-hidden border">
                             <img
                               src={sender?.profilePic || "/avatar.png"}
                               alt="avatar"
@@ -257,6 +299,7 @@ const Navbar = () => {
                             {sender?.fullName || "Người gửi"}
                           </div>
                         </div>
+
                         <p className="text-xs text-zinc-500 mb-1">
                           Gửi lúc: {new Date(msg.createdAt).toLocaleString()}
                         </p>
